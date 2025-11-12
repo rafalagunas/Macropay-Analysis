@@ -31,7 +31,7 @@ const Login = () => {
         setError(result.error);
         setIsLoading(false);
       }
-    }, 500);
+    }, 300);
   };
 
   return (
