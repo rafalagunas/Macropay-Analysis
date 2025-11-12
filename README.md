@@ -11,9 +11,11 @@ Plataforma web administrativa desarrollada en React para el análisis de hábito
 - **Sistema de Autenticación**: Login seguro con validación de credenciales
 - **Rutas Protegidas**: Acceso controlado al dashboard mediante autenticación
 - **Carga Dual de Archivos**:
+
   - Carga simultánea de 2 archivos (Tarificación y Detalle Recargas)
   - Soporte para archivos .xlsx, .xls y .csv
   - Drag & drop para cada archivo
+
 - **Correlación Automática de Datos**:
   - Combina datos de tarificación y recargas por MSISDN
   - Calcula métricas adicionales (días sin recarga, estado del cliente, etc.)
