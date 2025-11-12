@@ -7,7 +7,7 @@
  * - gemini-1.0-pro: Modelo anterior (legacy)
  */
 
-const GEMINI_API_KEY = import.meta.env.GEMINI_API_KEY;
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 const GEMINI_BASE_URL = "https://generativelanguage.googleapis.com";
 
 // Cache para modelos disponibles
