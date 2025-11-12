@@ -2,10 +2,13 @@
  * Servicio para enviar mensajes de WhatsApp usando Infobip API
  */
 
-const INFOBIP_API_KEY = process.env.INFOBIP_SECRET || "";
-const INFOBIP_FROM_NUMBER = process.env.INFOBIP_FROM_NUMBER || "447860088970";
+const INFOBIP_API_KEY =
+  import.meta.env.VITE_INFOBIP_SECRET ||
+  "8a9012a04be4485f681992e3d380b477-cb387512-f772-4ccb-ba17-6edd6dc8c3b2";
+const INFOBIP_FROM_NUMBER =
+  import.meta.env.VITE_INFOBIP_FROM_NUMBER || "447860088970";
 const INFOBIP_API_URL =
-  process.env.INFOBIP_API_URL || "https://pe3y38.api.infobip.com";
+  import.meta.env.VITE_INFOBIP_API_URL || "https://pe3y38.api.infobip.com";
 
 /**
  * Envía un mensaje de WhatsApp a un cliente usando un template

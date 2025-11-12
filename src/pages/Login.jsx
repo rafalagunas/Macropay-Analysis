@@ -40,7 +40,7 @@ const Login = () => {
         {/* Logo */}
         <div className="text-center mb-8">
           <img
-            src={process.env.LOGO_URL}
+            src={import.meta.env.VITE_LOGO_URL}
             alt="Macroplay Logo"
             className="h-24 md:h-32 mx-auto mb-6 drop-shadow-lg"
             onError={(e) => {

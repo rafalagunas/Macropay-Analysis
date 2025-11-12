@@ -7,7 +7,7 @@
  * - gemini-1.0-pro: Modelo anterior (legacy)
  */
 
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+const GEM_API_KEY = "AIzaSyCZVJahBlkJKojr9Q8qULPRybh25qtvikQ";
 const GEMINI_BASE_URL = "https://generativelanguage.googleapis.com";
 
 // Cache para modelos disponibles
@@ -23,7 +23,7 @@ const listAvailableModels = async () => {
 
   try {
     const response = await fetch(
-      `${GEMINI_BASE_URL}/v1beta/models?key=${GEMINI_API_KEY}`
+      `${GEMINI_BASE_URL}/v1beta/models?key=${GEM_API_KEY}`
     );
 
     if (!response.ok) {
@@ -54,9 +54,9 @@ const listAvailableModels = async () => {
  * Analiza los datos de consumo telefónico y genera recomendaciones
  */
 export const analyzeDataWithAI = async (data, analysis) => {
-  if (!GEMINI_API_KEY) {
+  if (!GEM_API_KEY) {
     throw new Error(
-      "GEMINI_API_KEY no está configurada en las variables de entorno"
+      "GEM_API_KEY no está configurada en las variables de entorno"
     );
   }
 
@@ -167,7 +167,7 @@ Por favor, proporciona un análisis detallado en formato estructurado con las si
 
 Sé específico, usa los números reales de los datos, y proporciona recomendaciones prácticas y accionables.`;
 
-    const response = await fetch(`${modelUrl}?key=${GEMINI_API_KEY}`, {
+    const response = await fetch(`${modelUrl}?key=${GEM_API_KEY}`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -340,8 +340,8 @@ const prepareDataSummary = (data, analysis) => {
  * Segmenta usuarios automáticamente usando IA
  */
 export const segmentUsers = async (data, analysis) => {
-  if (!GEMINI_API_KEY) {
-    throw new Error("GEMINI_API_KEY no está configurada");
+  if (!GEM_API_KEY) {
+    throw new Error("GEM_API_KEY no está configurada");
   }
 
   try {
@@ -566,7 +566,7 @@ IMPORTANTE: Responde SOLO con el JSON. NO agregues explicaciones ni texto adicio
 
 Usa los valores de las estadísticas proporcionadas para definir los umbrales. Define 4-6 segmentos relevantes. RESPONDE SOLO CON EL JSON, SIN TEXTO ADICIONAL.`;
 
-    const response = await fetch(`${modelUrl}?key=${GEMINI_API_KEY}`, {
+    const response = await fetch(`${modelUrl}?key=${GEM_API_KEY}`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -995,5 +995,5 @@ const fallbackSegmentation = (data, analysis) => {
  * Verifica si la API key está configurada
  */
 export const isGeminiConfigured = () => {
-  return !!GEMINI_API_KEY;
+  return !!GEM_API_KEY;
 };
