@@ -42,34 +42,109 @@ export const correlateData = (tarificacion, detalleRecargas) => {
     // Encontrar la recarga más reciente para este MSISDN
     const recargaMasReciente = recargas.length > 0 
       ? recargas.reduce((latest, current) => {
-          const latestDate = new Date(latest['Fecha Ultima Recarga'] || latest.Fecha || 0);
-          const currentDate = new Date(current['Fecha Ultima Recarga'] || current.Fecha || 0);
+          // Usar nombres nuevos de columnas
+          const latestDate = new Date(latest.FECHA_ULT_RECARGA || latest['Fecha Ultima Recarga'] || latest.Fecha || 0);
+          const currentDate = new Date(current.FECHA_ULT_RECARGA || current['Fecha Ultima Recarga'] || current.Fecha || 0);
           return currentDate > latestDate ? current : latest;
         })
       : null;
 
-    // Obtener valor de Consumo MB (manejo especial para 0)
-    const consumoMB = tarif.Consumo_MB ?? tarif['Consumo_MB'] ?? tarif['Consumo MB'];
-    const consumoMBValue = consumoMB !== null && consumoMB !== undefined && consumoMB !== '' 
-      ? consumoMB 
-      : '';
+    // Obtener valor de Consumo MB o equivalente (Cuota_Datos_Bytes convertido a MB)
+    let consumoMBValue = 0;
+    
+    // Intentar con Cuota_Datos_Bytes primero
+    const cuotaDatosBytes = tarif.Cuota_Datos_Bytes ?? tarif.cuota_datos_bytes;
+    if (cuotaDatosBytes !== null && cuotaDatosBytes !== undefined && cuotaDatosBytes !== '') {
+      const bytes = Number(cuotaDatosBytes);
+      if (!isNaN(bytes) && bytes > 0) {
+        // Convertir bytes a MB
+        consumoMBValue = parseFloat((bytes / (1024 * 1024)).toFixed(2));
+        if (index === 0) {
+          console.log(`🔍 Cuota_Datos_Bytes encontrado: ${cuotaDatosBytes} bytes = ${consumoMBValue} MB`);
+        }
+      }
+    }
+    
+    // Si no hay Cuota_Datos_Bytes, intentar con Tot_Units_Cumul (puede estar en MB o KB)
+    if (consumoMBValue === 0) {
+      const totUnits = tarif.Tot_Units_Cumul ?? tarif.tot_units_cumul;
+      if (totUnits !== null && totUnits !== undefined && totUnits !== '') {
+        const units = Number(totUnits);
+        if (!isNaN(units) && units > 0) {
+          // Si es un número muy grande, probablemente está en KB o Bytes
+          if (units > 100000) {
+            // Probablemente está en KB
+            consumoMBValue = parseFloat((units / 1024).toFixed(2));
+          } else {
+            // Probablemente ya está en MB
+            consumoMBValue = parseFloat(units.toFixed(2));
+          }
+          if (index === 0) {
+            console.log(`🔍 Tot_Units_Cumul encontrado: ${totUnits} = ${consumoMBValue} MB`);
+          }
+        }
+      }
+    }
+    
+    // Fallback a nombres antiguos por si acaso
+    if (consumoMBValue === 0) {
+      const consumoMB = tarif.Consumo_MB ?? tarif['Consumo_MB'] ?? tarif['Consumo MB'];
+      if (consumoMB !== null && consumoMB !== undefined && consumoMB !== '') {
+        const mb = Number(consumoMB);
+        if (!isNaN(mb) && mb > 0) {
+          consumoMBValue = parseFloat(mb.toFixed(2));
+          if (index === 0) {
+            console.log(`🔍 Consumo_MB encontrado: ${consumoMB} MB`);
+          }
+        }
+      }
+    }
+    
+    // Log de diagnóstico para el primer registro
+    if (index === 0) {
+      console.log('🔍 Columnas de consumo disponibles en tarificación:', {
+        'Cuota_Datos_Bytes': tarif.Cuota_Datos_Bytes,
+        'Tot_Units_Cumul': tarif.Tot_Units_Cumul,
+        'Consumo_MB': tarif.Consumo_MB,
+        'Valor final (MB)': consumoMBValue
+      });
+    }
+
+    // Obtener tarificación
+    const tarificacionValue = tarif.Tarificacion_PF ?? tarif.Tarificacion ?? tarif.Precio ?? '';
+
+    // Obtener oferta/producto
+    const ofertaValue = tarif.OfferId ?? tarif.RGU ?? tarif.Oferta ?? '';
 
     // Unir las columnas de ambos archivos por MSISDN (llave primaria)
-    // MSISDN y Oferta aparecen solo una vez ya que son la llave de correlación
     return {
-      // Columnas de TARIFICACIÓN
-      'Fecha Inicial': tarif['Fecha Inicial'] || tarif.Fecha_Inicial || '',
-      'Fecha Fin': tarif['Fecha Fin'] || tarif.Fecha_Fin || '',
+      // Columnas principales de TARIFICACIÓN (nombres normalizados para compatibilidad)
+      'Fecha Inicial': tarif.Fecha_Inicio_PF || tarif['Fecha Inicial'] || tarif.Fecha_Inicial || '',
+      'Fecha Fin': tarif.Fecha_Fin_PF || tarif['Fecha Fin'] || tarif.Fecha_Fin || '',
       'MSISDN': msisdn || '',
-      'Oferta': tarif.Oferta || '',
+      'Oferta': ofertaValue,
       'Consumo MB': consumoMBValue,
-      'Tarificacion': tarif.Tarificacion ?? '',
+      'Tarificacion': tarificacionValue,
       
-      // Columnas adicionales de DETALLE RECARGAS (sin duplicar MSISDN y Oferta)
-      'Fecha': recargaMasReciente ? recargaMasReciente.Fecha : '',
-      'Fecha Ultimo Consumo': recargaMasReciente ? recargaMasReciente['Fecha Ultimo Consumo'] : '',
-      'Fecha Activacion': recargaMasReciente ? recargaMasReciente['Fecha Activacion'] : '',
-      'Fecha Ultima Recarga': recargaMasReciente ? recargaMasReciente['Fecha Ultima Recarga'] : '',
+      // Columnas adicionales de TARIFICACIÓN (nuevas)
+      'Altan_Usr_ID': tarif.Altan_Usr_ID || '',
+      'IMSI': tarif.IMSI || '',
+      'RGU': tarif.RGU || '',
+      'Cliente': tarif.Cliente || '',
+      'Precio': tarif.Precio || '',
+      'OfferId': tarif.OfferId || '',
+      
+      // Columnas adicionales de DETALLE RECARGAS (sin duplicar MSISDN)
+      'Fecha': recargaMasReciente ? (recargaMasReciente.FECHA_CORTE || recargaMasReciente.Fecha || '') : '',
+      'Fecha Ultimo Consumo': recargaMasReciente ? (recargaMasReciente.FECHA_ULT_CONSUMO || recargaMasReciente['Fecha Ultimo Consumo'] || '') : '',
+      'Fecha Activacion': recargaMasReciente ? (recargaMasReciente.FECHA_ACTIVACION || recargaMasReciente['Fecha Activacion'] || '') : '',
+      'Fecha Ultima Recarga': recargaMasReciente ? (recargaMasReciente.FECHA_ULT_RECARGA || recargaMasReciente['Fecha Ultima Recarga'] || '') : '',
+      'COMPANY_NAME': recargaMasReciente ? recargaMasReciente.COMPANY_NAME : '',
+      'F_PRODUCTO': recargaMasReciente ? recargaMasReciente.F_PRODUCTO : '',
+      'MODALIDAD': recargaMasReciente ? recargaMasReciente.MODALIDAD : '',
+      'BRACKET_RECARGA': recargaMasReciente ? recargaMasReciente.BRACKET_RECARGA : '',
+      'BRACKET_CONSUMO': recargaMasReciente ? recargaMasReciente.BRACKET_CONSUMO : '',
+      'SURVIVAL': recargaMasReciente ? recargaMasReciente.SURVIVAL : '',
     };
   });
 
@@ -131,24 +206,38 @@ export const analyzeConsumptionData = (data) => {
     chartData: {}
   };
 
-  // Buscar columnas numéricas para estadísticas
+  // Buscar columnas numéricas para estadísticas (incluyendo 0 como válido)
   const numericColumns = columns.filter(col => {
-    return data.some(row => typeof row[col] === 'number' && !isNaN(row[col]));
+    return data.some(row => {
+      const val = row[col];
+      return (typeof val === 'number' && !isNaN(val)) || 
+             (!isNaN(parseFloat(val)) && isFinite(val));
+    });
   });
+  
+  console.log('📊 Columnas numéricas detectadas:', numericColumns);
 
   // Calcular estadísticas para columnas numéricas
   numericColumns.forEach(col => {
-    const values = data.map(row => Number(row[col]) || 0);
-    const total = values.reduce((sum, val) => sum + val, 0);
-    const average = total / values.length;
-    const max = Math.max(...values);
-    const min = Math.min(...values);
+    // Optimizado: calcular todo en un solo loop sin spread operator
+    let total = 0;
+    let max = -Infinity;
+    let min = Infinity;
+    
+    data.forEach(row => {
+      const val = Number(row[col]) || 0;
+      total += val;
+      if (val > max) max = val;
+      if (val < min) min = val;
+    });
+    
+    const average = total / data.length;
 
     analysis.summary[col] = {
       total,
       average: average.toFixed(2),
-      max,
-      min
+      max: max === -Infinity ? 0 : max,
+      min: min === Infinity ? 0 : min
     };
   });
 
@@ -248,37 +337,55 @@ const prepareChartData = (data, analysis) => {
   const sampleRow = data[0];
   const columns = Object.keys(sampleRow);
 
-  // 1. Gráfico de barras: distribución por categoría (primera columna categórica)
-  const categoricalColumn = columns.find(col => 
-    typeof data[0][col] === 'string' || isNaN(data[0][col])
-  );
-
+  // 1. Gráfico de barras: distribución por categoría usando MSISDN
+  const categoricalColumn = 'MSISDN';
+  
   console.log('📊 Columna categórica para barChart:', categoricalColumn);
 
   if (categoricalColumn) {
-    const categoryCounts = {};
+    // Buscar columna de consumo y tarificación para agrupar
+    const consumoCol = columns.find(col => 
+      col.toLowerCase().includes('consumo') && col.toLowerCase().includes('mb')
+    );
+    const tarifCol = columns.find(col => 
+      col.toLowerCase().includes('tarificacion') || col.toLowerCase().includes('tarificación')
+    );
+    
+    // Agrupar por MSISDN y sumar consumo o tarificación
+    const msisdnData = {};
     data.forEach(row => {
-      const category = row[categoricalColumn] || 'Sin categoría';
-      categoryCounts[category] = (categoryCounts[category] || 0) + 1;
+      const msisdn = row[categoricalColumn] || 'Sin MSISDN';
+      if (!msisdnData[msisdn]) {
+        msisdnData[msisdn] = {
+          consumo: 0,
+          tarificacion: 0,
+          registros: 0
+        };
+      }
+      msisdnData[msisdn].consumo += Number(row[consumoCol]) || 0;
+      msisdnData[msisdn].tarificacion += Number(row[tarifCol]) || 0;
+      msisdnData[msisdn].registros += 1;
     });
 
-    // Limitar a top 10 categorías
-    const sortedCategories = Object.entries(categoryCounts)
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 10);
+    // Ordenar por consumo o tarificación (el que tenga más datos)
+    const sortKey = consumoCol ? 'consumo' : (tarifCol ? 'tarificacion' : 'registros');
+    const sortedMSISDNs = Object.entries(msisdnData)
+      .sort((a, b) => b[1][sortKey] - a[1][sortKey])
+      .slice(0, 10); // Top 10 MSISDNs
 
-    const barChartData = sortedCategories.map(([, count]) => count);
+    const barChartData = sortedMSISDNs.map(([, data]) => data[sortKey]);
     
     analysis.chartData.barChart = {
-      labels: sortedCategories.map(([label]) => label),
+      labels: sortedMSISDNs.map(([msisdn]) => msisdn),
       data: barChartData,
-      title: `Distribución por ${categoricalColumn}`,
-      _timestamp: Date.now() // Marcador de tiempo para debug
+      title: `Top 10 MSISDNs por ${sortKey === 'consumo' ? 'Consumo (MB)' : sortKey === 'tarificacion' ? 'Tarificación ($)' : 'Registros'}`,
+      _timestamp: Date.now()
     };
     
     console.log('📊 barChart generado:', {
       labels: analysis.chartData.barChart.labels,
       data: analysis.chartData.barChart.data,
+      criterio: sortKey,
       total: barChartData.reduce((a, b) => a + b, 0),
       timestamp: analysis.chartData.barChart._timestamp
     });
@@ -286,8 +393,9 @@ const prepareChartData = (data, analysis) => {
 
   // 2. Gráfico de línea: tendencia temporal por día usando "Fecha Ultima Recarga"
   const dateColumn = columns.find(col => col === 'Fecha Ultima Recarga') 
+    || columns.find(col => col === 'FECHA_ULT_RECARGA')
     || columns.find(col => col.toLowerCase() === 'fecha ultima recarga')
-    || columns.find(col => col.toLowerCase().includes('fecha ultima recarga'));
+    || columns.find(col => col.toLowerCase().includes('fecha'));
 
   console.log('📅 Columna de fecha para lineChart:', dateColumn);
 
@@ -365,12 +473,16 @@ const prepareChartData = (data, analysis) => {
     console.warn('⚠️ No se encontró la columna "Fecha Ultima Recarga" para el gráfico de línea');
   }
 
-  // 3. Gráfico de pie: distribución porcentual (usar misma columna que barras)
+  // 3. Gráfico de pie: distribución porcentual por MSISDN (usar misma data que barras)
   if (categoricalColumn && analysis.chartData.barChart) {
+    // Tomar solo top 10 para el pie chart
+    const pieLabels = analysis.chartData.barChart.labels.slice(0, 10);
+    const pieData = analysis.chartData.barChart.data.slice(0, 10);
+    
     analysis.chartData.pieChart = {
-      labels: [...analysis.chartData.barChart.labels],
-      data: [...analysis.chartData.barChart.data],
-      title: `Distribución % por ${categoricalColumn}`,
+      labels: pieLabels,
+      data: pieData,
+      title: 'Distribución % por MSISDN (Top 10)',
       _timestamp: Date.now()
     };
   }
@@ -420,7 +532,7 @@ const prepareChartData = (data, analysis) => {
       .map(row => ({
         x: Number(row[consumoMBCol]) || 0,
         y: Number(row[tarificacionCol]) || 0,
-        label: row['Oferta'] || 'Sin oferta'
+        label: row['MSISDN'] || row['Oferta'] || 'Sin identificar'
       }));
 
     if (scatterData.length > 0) {
@@ -435,37 +547,38 @@ const prepareChartData = (data, analysis) => {
     }
   }
 
-  // 6. Gráfico de barras apiladas: Consumo por Oferta (top 5 ofertas)
+  // 6. Gráfico de barras apiladas: Consumo por MSISDN (top MSISDNs)
   if (consumoMBCol && categoricalColumn) {
-    const ofertasConsumo = {};
+    const msisdnConsumo = {};
     data.forEach(row => {
-      const oferta = row[categoricalColumn] || 'Sin oferta';
+      const msisdn = row[categoricalColumn] || 'Sin MSISDN';
       const consumo = Number(row[consumoMBCol]) || 0;
-      if (!ofertasConsumo[oferta]) {
-        ofertasConsumo[oferta] = 0;
+      if (!msisdnConsumo[msisdn]) {
+        msisdnConsumo[msisdn] = 0;
       }
-      ofertasConsumo[oferta] += consumo;
+      msisdnConsumo[msisdn] += consumo;
     });
 
-    const sortedOfertas = Object.entries(ofertasConsumo)
+    const sortedMSISDNs = Object.entries(msisdnConsumo)
       .sort((a, b) => b[1] - a[1])
-      .slice(0, 5);
+      .slice(0, 10);
 
-    if (sortedOfertas.length > 0) {
+    if (sortedMSISDNs.length > 0) {
       analysis.chartData.stackedBarChart = {
-        labels: sortedOfertas.map(([label]) => label),
-        data: sortedOfertas.map(([, consumo]) => consumo),
-        title: 'Consumo Total por Oferta (Top 5)',
+        labels: sortedMSISDNs.map(([label]) => label),
+        data: sortedMSISDNs.map(([, consumo]) => consumo),
+        title: 'Consumo Total (MB) por MSISDN (Top 10)',
         _timestamp: Date.now()
       };
-      console.log('📊 stackedBarChart generado:', sortedOfertas.length, 'ofertas');
+      console.log('📊 stackedBarChart generado:', sortedMSISDNs.length, 'MSISDNs');
     }
   }
 
   // 7. Gráfico de área: Tarificación acumulada por día (usando Fecha Inicial)
   const fechaInicialCol = columns.find(col => col === 'Fecha Inicial') 
+    || columns.find(col => col === 'Fecha_Inicio_PF')
     || columns.find(col => col.toLowerCase() === 'fecha inicial')
-    || columns.find(col => col.toLowerCase().includes('fecha inicial'));
+    || columns.find(col => col.toLowerCase().includes('fecha'));
   
   if (tarificacionCol && fechaInicialCol) {
     const normalizeDate = (dateValue) => {
@@ -531,8 +644,13 @@ const prepareChartData = (data, analysis) => {
       .filter(c => c > 0);
 
     if (consumos.length > 0) {
-      const maxConsumo = Math.max(...consumos);
-      const minConsumo = Math.min(...consumos);
+      // Optimizado: encontrar min/max sin spread operator
+      let maxConsumo = -Infinity;
+      let minConsumo = Infinity;
+      consumos.forEach(c => {
+        if (c > maxConsumo) maxConsumo = c;
+        if (c < minConsumo) minConsumo = c;
+      });
       const numBins = 6;
       const binSize = (maxConsumo - minConsumo) / numBins;
 

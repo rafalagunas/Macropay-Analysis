@@ -20,6 +20,8 @@ const Dashboard = () => {
   const [fileNames, setFileNames] = useState({ tarif: "", recarga: "" });
   const [segments, setSegments] = useState(null);
   const [isSegmenting, setIsSegmenting] = useState(false);
+  const [isProcessingData, setIsProcessingData] = useState(false); // Estado de procesamiento
+  const [processingStep, setProcessingStep] = useState(""); // Paso actual del procesamiento
   const [sendingWhatsApp, setSendingWhatsApp] = useState({}); // { segmentName: boolean }
   const [whatsAppProgress, setWhatsAppProgress] = useState({}); // { segmentName: { sent, total } }
   const [sendingSMS, setSendingSMS] = useState({}); // { segmentName: boolean }
@@ -65,41 +67,56 @@ const Dashboard = () => {
     }
   }, [analysis]);
 
-  // Función para extraer rango de fechas de los datos
+  // Función para extraer rango de fechas de los datos (optimizada para grandes volúmenes)
   const extractDateRange = (data) => {
     const dateColumns = [
       "Fecha Inicial",
+      "Fecha_Inicio_PF",
       "Fecha Fin",
+      "Fecha_Fin_PF",
       "Fecha",
+      "FECHA_CORTE",
       "Fecha Ultimo Consumo",
+      "FECHA_ULT_CONSUMO",
       "Fecha Activacion",
+      "FECHA_ACTIVACION",
       "Fecha Ultima Recarga",
+      "FECHA_ULT_RECARGA",
     ];
-    let allDates = [];
 
+    let minTime = Infinity;
+    let maxTime = -Infinity;
+    let foundDates = false;
+
+    // Optimización: encontrar min/max en un solo loop sin crear array grande
     data.forEach((row) => {
       dateColumns.forEach((col) => {
         const value = row[col];
         if (value && value !== "") {
-          let date;
+          let timestamp;
+
           if (typeof value === "number") {
             // Excel serial number - Usar UTC para evitar problemas de zona horaria
             // 25569 es la diferencia en días entre 1900-01-01 y 1970-01-01
             const days = Math.floor(value) - 25569;
-            date = new Date(days * 24 * 60 * 60 * 1000);
+            timestamp = days * 24 * 60 * 60 * 1000;
           } else {
-            date = new Date(value);
+            const date = new Date(value);
+            timestamp = date.getTime();
           }
-          if (!isNaN(date.getTime())) {
-            allDates.push(date);
+
+          if (!isNaN(timestamp)) {
+            foundDates = true;
+            if (timestamp < minTime) minTime = timestamp;
+            if (timestamp > maxTime) maxTime = timestamp;
           }
         }
       });
     });
 
-    if (allDates.length > 0) {
-      const min = new Date(Math.min(...allDates.map((d) => d.getTime())));
-      const max = new Date(Math.max(...allDates.map((d) => d.getTime())));
+    if (foundDates && minTime !== Infinity && maxTime !== -Infinity) {
+      const min = new Date(minTime);
+      const max = new Date(maxTime);
 
       // Usar UTC para obtener las fechas correctas
       const minStr = `${min.getUTCFullYear()}-${String(
@@ -109,11 +126,15 @@ const Dashboard = () => {
         max.getUTCMonth() + 1
       ).padStart(2, "0")}-${String(max.getUTCDate()).padStart(2, "0")}`;
 
+      console.log(`📅 Rango de fechas encontrado: ${minStr} a ${maxStr}`);
+
       return {
         min: minStr,
         max: maxStr,
       };
     }
+
+    console.warn("⚠️ No se encontraron fechas válidas en los datos");
     return { min: null, max: null };
   };
 
@@ -139,9 +160,14 @@ const Dashboard = () => {
     const muestraFuera = [];
 
     const filtered = data.filter((row, index) => {
-      // Intentar obtener la fecha principal del registro
+      // Intentar obtener la fecha principal del registro (priorizar Fecha Inicial)
       const fechaValue =
-        row["Fecha Inicial"] || row["Fecha"] || row["Fecha Fin"];
+        row["Fecha Inicial"] ||
+        row["Fecha_Inicio_PF"] ||
+        row["Fecha"] ||
+        row["FECHA_CORTE"] ||
+        row["Fecha Fin"] ||
+        row["Fecha_Fin_PF"];
 
       // Log del primer registro para debugging
       if (index === 0) {
@@ -233,44 +259,162 @@ const Dashboard = () => {
 
   const handleDataLoaded = async (filesData, names) => {
     if (filesData && filesData.tarificacion && filesData.detalleRecargas) {
-      console.log("📊 Correlacionando datos de ambos archivos...");
+      try {
+        setIsProcessingData(true);
+        setProcessingStep("Validando archivos...");
 
-      // Correlacionar los dos archivos por MSISDN
-      const correlated = correlateData(
-        filesData.tarificacion,
-        filesData.detalleRecargas
-      );
+        console.log("📊 Iniciando procesamiento de datos...");
+        console.log(
+          `  Tarificación: ${filesData.tarificacion.length} registros`
+        );
+        console.log(
+          `  Detalle Recargas: ${filesData.detalleRecargas.length} registros`
+        );
 
-      console.log(`✅ Datos correlacionados: ${correlated.length} registros`);
+        // Validar que hay datos en ambos archivos
+        if (
+          filesData.tarificacion.length === 0 ||
+          filesData.detalleRecargas.length === 0
+        ) {
+          console.error("❌ Error: Uno o ambos archivos están vacíos");
+          alert(
+            "Error: Uno o ambos archivos están vacíos. Por favor, verifica que los archivos contengan datos."
+          );
+          return;
+        }
 
-      // Extraer rango de fechas disponible
-      const range = extractDateRange(correlated);
-      console.log("📅 RANGO DE FECHAS EN LOS DATOS:", range);
-      console.log("📊 Muestra de fechas en los datos:");
-      correlated.slice(0, 5).forEach((row, i) => {
-        console.log(`  Registro ${i + 1}:`, {
-          "Fecha Inicial": row["Fecha Inicial"],
-          Fecha: row["Fecha"],
-          MSISDN: row["MSISDN"],
-        });
-      });
-      setDateRange(range);
-      setSelectedDateRange({ start: range.min, end: range.max }); // Inicialmente mostrar todo
-      setTempDateRange({ start: range.min, end: range.max }); // Sincronizar temp
+        // Verificar que tienen las columnas necesarias
+        const tarifKeys = Object.keys(filesData.tarificacion[0] || {});
+        const recargaKeys = Object.keys(filesData.detalleRecargas[0] || {});
 
-      // Guardar datos originales
-      setOriginalData(correlated);
-      setCorrelatedData(correlated);
-      setFileNames({
-        tarif: names.tarifFileName,
-        recarga: names.recargaFileName,
-      });
+        console.log("📋 Columnas en Tarificación:", tarifKeys);
+        console.log("📋 Columnas en Detalle Recargas:", recargaKeys);
 
-      // Analizar los datos correlacionados
-      const analysisResult = analyzeConsumptionData(correlated);
-      setAnalysis(analysisResult);
-      setSegments(null); // Reset segments when new data is loaded
-      setChartKey(Date.now()); // Forzar re-render de gráficos
+        // Verificar que existe la columna MSISDN en ambos archivos
+        const hasMSISDNTarif = tarifKeys.some(
+          (key) => key.toLowerCase() === "msisdn"
+        );
+        const hasMSISDNRecarga = recargaKeys.some(
+          (key) => key.toLowerCase() === "msisdn"
+        );
+
+        if (!hasMSISDNTarif || !hasMSISDNRecarga) {
+          console.error(
+            "❌ Error: No se encontró la columna MSISDN en uno o ambos archivos"
+          );
+          alert(
+            "Error: No se encontró la columna MSISDN en uno o ambos archivos. Esta columna es necesaria para correlacionar los datos."
+          );
+          return;
+        }
+
+        setProcessingStep("Correlacionando datos por MSISDN...");
+        console.log("📊 Correlacionando datos de ambos archivos...");
+        console.log(
+          "⏱️ Esto puede tardar varios minutos para archivos grandes..."
+        );
+
+        // Usar setTimeout para dar tiempo al UI de actualizarse
+        setTimeout(async () => {
+          try {
+            // Correlacionar los dos archivos por MSISDN
+            const correlated = correlateData(
+              filesData.tarificacion,
+              filesData.detalleRecargas
+            );
+
+            if (!correlated || correlated.length === 0) {
+              console.error("❌ Error: La correlación no produjo resultados");
+              alert(
+                "Error: No se pudieron correlacionar los datos. Verifica que ambos archivos tengan MSISDNs en común."
+              );
+              return;
+            }
+
+            console.log(
+              `✅ Datos correlacionados: ${correlated.length} registros`
+            );
+            console.log("📋 Muestra de datos correlacionados:", correlated[0]);
+
+            // Extraer rango de fechas disponible
+            setProcessingStep("Extrayendo rangos de fechas...");
+            console.log("📅 Extrayendo rango de fechas...");
+            const range = extractDateRange(correlated);
+            console.log("📅 RANGO DE FECHAS EN LOS DATOS:", range);
+            console.log("📊 Muestra de fechas en los datos:");
+            correlated.slice(0, 5).forEach((row, i) => {
+              console.log(`  Registro ${i + 1}:`, {
+                "Fecha Inicial": row["Fecha Inicial"],
+                Fecha: row["Fecha"],
+                MSISDN: row["MSISDN"],
+              });
+            });
+            setDateRange(range);
+            setSelectedDateRange({ start: range.min, end: range.max }); // Inicialmente mostrar todo
+            setTempDateRange({ start: range.min, end: range.max }); // Sincronizar temp
+
+            // Guardar datos originales
+            setOriginalData(correlated);
+            setCorrelatedData(correlated);
+            setFileNames({
+              tarif: names.tarifFileName,
+              recarga: names.recargaFileName,
+            });
+
+            // Analizar los datos correlacionados
+            setProcessingStep("Generando gráficos y análisis...");
+            console.log("📊 Analizando datos para gráficos...");
+            const analysisResult = analyzeConsumptionData(correlated);
+
+            if (!analysisResult) {
+              console.error("❌ Error: El análisis no produjo resultados");
+              return;
+            }
+
+            console.log("✅ Análisis completado:", {
+              totalRecords: analysisResult.totalRecords,
+              hasChartData: !!analysisResult.chartData,
+            });
+
+            setAnalysis(analysisResult);
+            setSegments(null); // Reset segments when new data is loaded
+            setChartKey(Date.now()); // Forzar re-render de gráficos
+
+            setIsProcessingData(false);
+            setProcessingStep("");
+            console.log("✅ Procesamiento completado exitosamente");
+          } catch (correlationError) {
+            console.error(
+              "❌ Error durante la correlación o análisis:",
+              correlationError
+            );
+            setIsProcessingData(false);
+            setProcessingStep("");
+            alert(
+              `Error al procesar los archivos: ${correlationError.message}\n\nSi los archivos son muy grandes (>200MB), considera dividirlos en partes más pequeñas.`
+            );
+
+            // Limpiar datos en caso de error
+            setCorrelatedData(null);
+            setOriginalData(null);
+            setFileNames({ tarif: "", recarga: "" });
+            setAnalysis(null);
+            setSegments(null);
+          }
+        }, 100);
+      } catch (error) {
+        console.error("❌ Error al cargar los datos:", error);
+        setIsProcessingData(false);
+        setProcessingStep("");
+        alert(`Error al cargar los datos: ${error.message}`);
+
+        // Limpiar datos en caso de error
+        setCorrelatedData(null);
+        setOriginalData(null);
+        setFileNames({ tarif: "", recarga: "" });
+        setAnalysis(null);
+        setSegments(null);
+      }
     } else {
       // Limpiar datos
       setCorrelatedData(null);
@@ -639,8 +783,33 @@ const Dashboard = () => {
             <FileUpload onDataLoaded={handleDataLoaded} />
           </section>
 
+          {/* Indicador de Procesamiento */}
+          {isProcessingData && (
+            <section>
+              <div className="bg-gradient-to-r from-blue-500/10 to-purple-500/10 backdrop-blur-md rounded-xl p-6 border border-blue-500/30 animate-pulse">
+                <div className="flex items-center gap-4">
+                  <div className="flex-shrink-0">
+                    <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="text-xl font-bold text-white mb-2">
+                      Procesando Archivos...
+                    </h3>
+                    <p className="text-white/70 text-sm">
+                      {processingStep || "Iniciando procesamiento..."}
+                    </p>
+                    <p className="text-white/50 text-xs mt-2">
+                      Este proceso puede tardar varios minutos para archivos
+                      grandes. Por favor, espera...
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </section>
+          )}
+
           {/* Estadísticas Resumidas */}
-          {analysis && (
+          {analysis && !isProcessingData && (
             <section>
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
                 <h2 className="text-2xl md:text-3xl font-bold text-white">

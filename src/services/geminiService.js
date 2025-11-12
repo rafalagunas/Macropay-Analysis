@@ -379,11 +379,21 @@ export const segmentUsers = async (data, analysis) => {
     // Extraer rangos de fechas de los datos
     const dateColumns = [
       "Fecha Inicial",
+      "Fecha_Inicio_PF",
       "Fecha Fin",
+      "Fecha_Fin_PF",
       "Fecha",
       "Fecha Ultimo Consumo",
+      "FECHA_ULT_CONSUMO",
       "Fecha Activacion",
+      "FECHA_ACTIVACION",
       "Fecha Ultima Recarga",
+      "FECHA_ULT_RECARGA",
+      "FECHA_CORTE",
+      "FECHA_REPORTE",
+      "Product_Start_Date",
+      "Product_End_Date",
+      "Activation_DT",
     ];
     const dateRanges = {};
 
@@ -405,8 +415,16 @@ export const segmentUsers = async (data, analysis) => {
         .filter((d) => !isNaN(d.getTime()));
 
       if (dates.length > 0) {
-        const min = new Date(Math.min(...dates.map((d) => d.getTime())));
-        const max = new Date(Math.max(...dates.map((d) => d.getTime())));
+        // Optimizado: encontrar min/max sin spread operator para evitar stack overflow
+        let minTime = Infinity;
+        let maxTime = -Infinity;
+        dates.forEach((d) => {
+          const time = d.getTime();
+          if (time < minTime) minTime = time;
+          if (time > maxTime) maxTime = time;
+        });
+        const min = new Date(minTime);
+        const max = new Date(maxTime);
         dateRanges[col] = {
           min: min.toISOString().split("T")[0],
           max: max.toISOString().split("T")[0],
@@ -437,26 +455,44 @@ export const segmentUsers = async (data, analysis) => {
     // Calcular estadísticas específicas de Consumo MB y Fecha Ultima Recarga
     const consumoMBCol = Object.keys(data[0] || {}).find(
       (col) =>
-        col.toLowerCase().includes("consumo") &&
-        col.toLowerCase().includes("mb")
+        (col.toLowerCase().includes("consumo") &&
+          col.toLowerCase().includes("mb")) ||
+        col === "Cuota_Datos_Bytes"
     );
     const fechaUltimaRecargaCol = Object.keys(data[0] || {}).find(
       (col) =>
+        col === "FECHA_ULT_RECARGA" ||
         col.toLowerCase().includes("fecha ultima recarga") ||
-        col.toLowerCase().includes("fecha_ultima_recarga")
+        col.toLowerCase().includes("fecha_ultima_recarga") ||
+        col.toLowerCase().includes("fecha_ult_recarga")
     );
 
     // Calcular estadísticas de Consumo MB
     let consumoStats = {};
     if (consumoMBCol) {
       const consumos = data
-        .map((row) => Number(row[consumoMBCol]) || 0)
+        .map((row) => {
+          if (consumoMBCol === "Cuota_Datos_Bytes") {
+            // Convertir bytes a MB
+            return (Number(row[consumoMBCol]) || 0) / (1024 * 1024);
+          }
+          return Number(row[consumoMBCol]) || 0;
+        })
         .filter((c) => c > 0);
       if (consumos.length > 0) {
+        // Optimizado: encontrar min/max sin spread operator
+        let min = Infinity;
+        let max = -Infinity;
+        let sum = 0;
+        consumos.forEach((c) => {
+          if (c < min) min = c;
+          if (c > max) max = c;
+          sum += c;
+        });
         consumoStats = {
-          min: Math.min(...consumos),
-          max: Math.max(...consumos),
-          promedio: consumos.reduce((a, b) => a + b, 0) / consumos.length,
+          min: min,
+          max: max,
+          promedio: sum / consumos.length,
           mediana: consumos.sort((a, b) => a - b)[
             Math.floor(consumos.length / 2)
           ],
@@ -492,12 +528,19 @@ export const segmentUsers = async (data, analysis) => {
         .filter((d) => d !== null && d >= 0);
 
       if (diasDesdeRecarga.length > 0) {
+        // Optimizado: encontrar min/max sin spread operator
+        let min = Infinity;
+        let max = -Infinity;
+        let sum = 0;
+        diasDesdeRecarga.forEach((d) => {
+          if (d < min) min = d;
+          if (d > max) max = d;
+          sum += d;
+        });
         diasRecargaStats = {
-          min: Math.min(...diasDesdeRecarga),
-          max: Math.max(...diasDesdeRecarga),
-          promedio:
-            diasDesdeRecarga.reduce((a, b) => a + b, 0) /
-            diasDesdeRecarga.length,
+          min: min,
+          max: max,
+          promedio: sum / diasDesdeRecarga.length,
           mediana: diasDesdeRecarga.sort((a, b) => a - b)[
             Math.floor(diasDesdeRecarga.length / 2)
           ],
@@ -664,16 +707,28 @@ const assignSegment = (row, segmentData, analysis) => {
   // Buscar columnas de Consumo MB y Fecha Ultima Recarga
   const consumoMBCol = Object.keys(row).find(
     (key) =>
-      key.toLowerCase().includes("consumo") && key.toLowerCase().includes("mb")
+      (key.toLowerCase().includes("consumo") &&
+        key.toLowerCase().includes("mb")) ||
+      key === "Cuota_Datos_Bytes"
   );
   const fechaUltimaRecargaCol = Object.keys(row).find(
     (key) =>
+      key === "FECHA_ULT_RECARGA" ||
       key.toLowerCase().includes("fecha ultima recarga") ||
-      key.toLowerCase().includes("fecha_ultima_recarga")
+      key.toLowerCase().includes("fecha_ultima_recarga") ||
+      key.toLowerCase().includes("fecha_ult_recarga")
   );
 
   // Obtener valores
-  const consumoMB = consumoMBCol ? Number(row[consumoMBCol]) || 0 : 0;
+  let consumoMB = 0;
+  if (consumoMBCol) {
+    if (consumoMBCol === "Cuota_Datos_Bytes") {
+      // Convertir bytes a MB
+      consumoMB = (Number(row[consumoMBCol]) || 0) / (1024 * 1024);
+    } else {
+      consumoMB = Number(row[consumoMBCol]) || 0;
+    }
+  }
 
   // Calcular días desde última recarga
   let diasDesdeRecarga = null;
@@ -832,17 +887,31 @@ const fallbackSegmentation = (data, analysis) => {
   // Buscar columnas
   const consumoMBCol = Object.keys(data[0] || {}).find(
     (key) =>
-      key.toLowerCase().includes("consumo") && key.toLowerCase().includes("mb")
+      (key.toLowerCase().includes("consumo") &&
+        key.toLowerCase().includes("mb")) ||
+      key === "Cuota_Datos_Bytes"
   );
   const fechaUltimaRecargaCol = Object.keys(data[0] || {}).find(
     (key) =>
+      key === "FECHA_ULT_RECARGA" ||
       key.toLowerCase().includes("fecha ultima recarga") ||
-      key.toLowerCase().includes("fecha_ultima_recarga")
+      key.toLowerCase().includes("fecha_ultima_recarga") ||
+      key.toLowerCase().includes("fecha_ult_recarga")
   );
 
   // Calcular umbrales basados en los datos
   const consumos = data
-    .map((row) => Number(row[consumoMBCol]) || 0)
+    .map((row) => {
+      if (consumoMBCol) {
+        if (consumoMBCol === "Cuota_Datos_Bytes") {
+          // Convertir bytes a MB
+          return (Number(row[consumoMBCol]) || 0) / (1024 * 1024);
+        } else {
+          return Number(row[consumoMBCol]) || 0;
+        }
+      }
+      return 0;
+    })
     .filter((c) => c > 0);
 
   const consumoMedio =
@@ -856,7 +925,15 @@ const fallbackSegmentation = (data, analysis) => {
   hoy.setUTCHours(0, 0, 0, 0);
 
   const segmentedData = data.map((row) => {
-    const consumoMB = consumoMBCol ? Number(row[consumoMBCol]) || 0 : 0;
+    let consumoMB = 0;
+    if (consumoMBCol) {
+      if (consumoMBCol === "Cuota_Datos_Bytes") {
+        // Convertir bytes a MB
+        consumoMB = (Number(row[consumoMBCol]) || 0) / (1024 * 1024);
+      } else {
+        consumoMB = Number(row[consumoMBCol]) || 0;
+      }
+    }
 
     // Calcular días desde última recarga
     let diasDesdeRecarga = null;

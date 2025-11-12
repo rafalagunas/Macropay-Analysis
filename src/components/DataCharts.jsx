@@ -215,6 +215,11 @@ const DataCharts = ({ chartData }) => {
       tooltip: {
         ...chartOptions.plugins.tooltip,
         callbacks: {
+          title: function(context) {
+            // Mostrar el MSISDN como título del tooltip
+            const dataPoint = scatterChartData.datasets[0].data[context[0].dataIndex];
+            return dataPoint.label || 'Sin identificar';
+          },
           label: function(context) {
             return `Consumo: ${context.parsed.x.toLocaleString()} MB, Tarificación: $${context.parsed.y.toLocaleString()}`;
           }
