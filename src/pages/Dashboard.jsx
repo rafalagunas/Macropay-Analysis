@@ -661,7 +661,7 @@ const Dashboard = () => {
             text: segmentText,
           },
           {
-            destinations: [{ to: "5540607137" }],
+            destinations: [{ to: "525540607137" }],
             from: "444000",
             text: segmentText,
           },
