@@ -2,7 +2,7 @@
  * Servicio para enviar mensajes de WhatsApp usando Infobip API
  */
 
-const INFOBIP_API_KEY = import.meta.env.VITE_INFOBIP_SECRET || "";
+const INFOBIP_API_KEY = import.meta.env.INFOBIP_SECRET || "";
 const INFOBIP_FROM_NUMBER =
   import.meta.env.VITE_INFOBIP_FROM_NUMBER || "447860088970";
 const INFOBIP_API_URL =

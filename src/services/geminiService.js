@@ -7,7 +7,7 @@
  * - gemini-1.0-pro: Modelo anterior (legacy)
  */
 
-const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
+const GEMINI_API_KEY = import.meta.env.GEMINI_API_KEY;
 const GEMINI_BASE_URL = "https://generativelanguage.googleapis.com";
 
 // Cache para modelos disponibles
@@ -56,7 +56,7 @@ const listAvailableModels = async () => {
 export const analyzeDataWithAI = async (data, analysis) => {
   if (!GEMINI_API_KEY) {
     throw new Error(
-      "VITE_GEMINI_API_KEY no está configurada en las variables de entorno"
+      "GEMINI_API_KEY no está configurada en las variables de entorno"
     );
   }
 
@@ -341,7 +341,7 @@ const prepareDataSummary = (data, analysis) => {
  */
 export const segmentUsers = async (data, analysis) => {
   if (!GEMINI_API_KEY) {
-    throw new Error("VITE_GEMINI_API_KEY no está configurada");
+    throw new Error("GEMINI_API_KEY no está configurada");
   }
 
   try {

@@ -10,11 +10,11 @@ Plataforma web administrativa desarrollada en React para el análisis de hábito
 
 - **Sistema de Autenticación**: Login seguro con validación de credenciales
 - **Rutas Protegidas**: Acceso controlado al dashboard mediante autenticación
-- **Carga Dual de Archivos**: 
+- **Carga Dual de Archivos**:
   - Carga simultánea de 2 archivos (Tarificación y Detalle Recargas)
   - Soporte para archivos .xlsx, .xls y .csv
   - Drag & drop para cada archivo
-- **Correlación Automática de Datos**: 
+- **Correlación Automática de Datos**:
   - Combina datos de tarificación y recargas por MSISDN
   - Calcula métricas adicionales (días sin recarga, estado del cliente, etc.)
 - **Análisis Avanzado de Datos**: Procesamiento inteligente de información correlacionada
@@ -29,13 +29,13 @@ Plataforma web administrativa desarrollada en React para el análisis de hábito
   - Retención: identificación de clientes en riesgo, inactivos o con baja actividad
   - Estrategias de prospección y crecimiento
   - Acciones prioritarias accionables basadas en métricas calculadas
-- **👥 Segmentación Inteligente con IA**: 
+- **👥 Segmentación Inteligente con IA**:
   - Clasificación manual de clientes en segmentos estratégicos con un clic
   - Basada en consumo, recargas, estado y actividad reciente
   - Visualización de distribución por segmento
   - Filtrado de tabla por segmento
   - Opción de re-segmentar cuando sea necesario
-- **Tabla de Datos Avanzada**: 
+- **Tabla de Datos Avanzada**:
   - Búsqueda global en tiempo real
   - Filtros por columna
   - Ordenamiento ascendente/descendente
@@ -77,16 +77,17 @@ El archivo `.env` ya está configurado con las variables necesarias:
 
 ```env
 VITE_APP_NAME=Macroplay Dashboard
-VITE_LOGO_URL=https://macropay.mx/wp-content/uploads/2025/09/LOGO-MACROPAY_Mesa-de-trabajo-1.png
+LOGO_URL=https://macropay.mx/wp-content/uploads/2025/09/LOGO-MACROPAY_Mesa-de-trabajo-1.png
 VITE_COLOR_PRIMARY=#0047BA
 VITE_COLOR_SECONDARY=#FFDD00
 VITE_COLOR_TEXT=#FFFFFF
 
 # Opcional: Para habilitar el análisis con IA
-VITE_GEMINI_API_KEY=tu_api_key_de_gemini
+GEMINI_API_KEY=tu_api_key_de_gemini
 ```
 
 **🤖 Para habilitar el Análisis con IA:**
+
 - Consulta: [INSTRUCCIONES_API_KEY.md](INSTRUCCIONES_API_KEY.md) (inicio rápido)
 - Documentación completa: [CONFIGURACION_IA.md](CONFIGURACION_IA.md)
 
@@ -150,13 +151,14 @@ La aplicación implementa un sistema de autenticación mockeado para demostraci�
    - **Archivo 2 - Detalle Recargas**: Arrastra o selecciona el archivo de historial de recargas
    - **Formatos aceptados**: .xlsx, .xls, .csv
    - **Archivos de ejemplo incluidos**: `ejemplo_tarificacion.csv` y `ejemplo_detalle_recargas.csv`
-   
 3. **Correlación Automática**: Una vez cargados ambos archivos, el sistema:
+
    - ✅ Correlaciona datos por MSISDN (número telefónico)
    - ✅ Calcula métricas: Total_Recargas, Dias_Sin_Recarga, Dias_Sin_Consumo, Estado_Cliente
    - ✅ Genera estadísticas combinadas
 
 4. **Ver Análisis**: Automáticamente se generarán:
+
    - Estadísticas resumidas de datos correlacionados
    - Múltiples gráficos de visualización
    - **🤖 Análisis estratégico con IA** (si está configurada la API key)
@@ -164,18 +166,21 @@ La aplicación implementa un sistema de autenticación mockeado para demostraci�
    - Tabla detallada con datos combinados, filtros y búsqueda
 
 5. **Usar Filtros en la Tabla**:
+
    - Búsqueda global: Escribe en el campo superior
    - Filtros por columna: Haz clic en "Mostrar Filtros"
    - Ordenamiento: Clic en cualquier encabezado de columna
    - Filtrar por segmento: Usa el filtro de la columna "Segmento_IA"
 
 6. **Análisis con IA**:
+
    - Se genera automáticamente al cargar los archivos
    - Incluye insights sobre consumo, recargas y comportamiento
    - Recomendaciones para ventas, retención y crecimiento
    - Espera 10-30 segundos para obtener resultados
 
 7. **Segmentación de Clientes** (Opcional):
+
    - Haz clic en "Segmentar Clientes con IA"
    - El sistema clasificará automáticamente a tus clientes en segmentos
    - Visualiza la distribución por segmento
@@ -189,6 +194,7 @@ La aplicación implementa un sistema de autenticación mockeado para demostraci�
 ### 📂 Archivos de Ejemplo
 
 Consulta [INSTRUCCIONES_ARCHIVOS_EJEMPLO.md](INSTRUCCIONES_ARCHIVOS_EJEMPLO.md) para detalles sobre:
+
 - Estructura de columnas requeridas
 - Cómo usar los archivos de ejemplo
 - Cómo crear tus propios archivos
@@ -224,6 +230,7 @@ El sistema implementa un proceso de correlación inteligente:
 5. **Segmentación IA**: Clasifica clientes en categorías estratégicas
 
 **Métricas Calculadas:**
+
 - `Total_Recargas`: Número total de recargas por cliente
 - `Dias_Sin_Recarga`: Días desde la última recarga
 - `Dias_Sin_Consumo`: Días desde el último consumo
@@ -253,14 +260,17 @@ Edita `src/utils/dataAnalysis.js` para ajustar la lógica de análisis según tu
 ## 🐛 Solución de Problemas
 
 ### El logo no se muestra
+
 - Verifica la conexión a internet
 - Comprueba que la URL del logo sea accesible
 
 ### Errores al cargar Excel
+
 - Asegúrate de que el archivo tenga extensión .xlsx o .xls
 - Verifica que el archivo contenga datos válidos
 
 ### Problemas de compilación
+
 ```bash
 # Limpia node_modules e instala de nuevo
 rm -rf node_modules
@@ -278,4 +288,3 @@ Para soporte técnico o preguntas, contacta al equipo de desarrollo de Macroplay
 ---
 
 **Desarrollado con ❤️ para Macroplay**
-

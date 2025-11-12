@@ -322,7 +322,7 @@ const AIInsights = ({ data, analysis }) => {
               Para usar el análisis con IA de Gemini, necesitas configurar la
               variable de entorno{" "}
               <code className="bg-white/10 px-2 py-1 rounded text-macroplay-yellow">
-                VITE_GEMINI_API_KEY
+                GEMINI_API_KEY
               </code>
             </p>
             <div className="bg-white/5 rounded-lg p-3 text-xs font-mono text-white/60">
@@ -331,7 +331,7 @@ const AIInsights = ({ data, analysis }) => {
               </p>
               <p className="mb-1">2. Agrega al archivo .env:</p>
               <p className="text-macroplay-yellow">
-                VITE_GEMINI_API_KEY=tu_api_key_aqui
+                GEMINI_API_KEY=tu_api_key_aqui
               </p>
               <p className="mt-2">3. Reinicia el servidor de desarrollo</p>
             </div>
