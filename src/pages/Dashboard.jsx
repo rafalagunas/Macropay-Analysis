@@ -479,7 +479,10 @@ const Dashboard = () => {
             {/* Logo y Título */}
             <div className="flex items-center gap-3 md:gap-4">
               <img
-                src={import.meta.env.LOGO_URL}
+                src={
+                  import.meta.env.VITE_LOGO_URL ||
+                  "https://macropay.mx/wp-content/uploads/2025/09/LOGO-MACROPAY_Mesa-de-trabajo-1.png"
+                }
                 alt="Macroplay Logo"
                 style={{ height: "250px" }}
                 onError={(e) => {
