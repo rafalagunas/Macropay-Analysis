@@ -11,6 +11,15 @@ const DataTable = ({ data }) => {
   const [showFilters, setShowFilters] = useState(false);
   const itemsPerPage = 10;
 
+  // Función para convertir hex a rgba con opacidad
+  const hexToRgba = (hex, alpha) => {
+    if (!hex || !hex.startsWith("#")) return `rgba(0, 0, 0, ${alpha})`;
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+  };
+
   if (!data || data.length === 0) {
     return null;
   }
@@ -420,21 +429,34 @@ const DataTable = ({ data }) => {
           </thead>
           <tbody className="divide-y divide-white/10">
             {currentData.length > 0 ? (
-              currentData.map((row, rowIndex) => (
-                <tr
-                  key={rowIndex}
-                  className="hover:bg-white/5 transition-colors"
-                >
-                  {columns.map((column, colIndex) => (
-                    <td
-                      key={colIndex}
-                      className="px-6 py-4 text-sm text-white whitespace-nowrap"
-                    >
-                      {renderCellValue(row[column], column)}
-                    </td>
-                  ))}
-                </tr>
-              ))
+              currentData.map((row, rowIndex) => {
+                // Obtener el color del segmento si existe
+                const segmentColor = row.Segmento_Color || null;
+
+                const rowStyle = segmentColor
+                  ? {
+                      borderLeft: `8px solid ${segmentColor}`,
+                      backgroundColor: hexToRgba(segmentColor, 0.35), // 35% de opacidad para máxima visibilidad
+                    }
+                  : {};
+
+                return (
+                  <tr
+                    key={rowIndex}
+                    className="hover:bg-white/5 transition-colors"
+                    style={rowStyle}
+                  >
+                    {columns.map((column, colIndex) => (
+                      <td
+                        key={colIndex}
+                        className="px-6 py-4 text-sm text-white whitespace-nowrap"
+                      >
+                        {renderCellValue(row[column], column)}
+                      </td>
+                    ))}
+                  </tr>
+                );
+              })
             ) : (
               <tr>
                 <td
