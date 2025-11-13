@@ -7,7 +7,7 @@
  * - gemini-1.0-pro: Modelo anterior (legacy)
  */
 
-const GEM_API_KEY = "AIzaSyCZVJahBlkJKojr9Q8qULPRybh25qtvikQ";
+const GEM_API_KEY = "AIzaSyBGQR5qKELf9pOD83YkhgCK3M8UDzJd71g";
 const GEMINI_BASE_URL = "https://generativelanguage.googleapis.com";
 
 // Cache para modelos disponibles
@@ -339,7 +339,7 @@ const prepareDataSummary = (data, analysis) => {
 /**
  * Segmenta usuarios automáticamente usando IA
  */
-export const segmentUsers = async (data, analysis) => {
+export const segmentUsers = async (data, analysis, customPrompt = "") => {
   if (!GEM_API_KEY) {
     throw new Error("GEM_API_KEY no está configurada");
   }
@@ -607,7 +607,11 @@ IMPORTANTE: Responde SOLO con el JSON. NO agregues explicaciones ni texto adicio
   ]
 }
 
-Usa los valores de las estadísticas proporcionadas para definir los umbrales. Define 4-6 segmentos relevantes. RESPONDE SOLO CON EL JSON, SIN TEXTO ADICIONAL.`;
+Usa los valores de las estadísticas proporcionadas para definir los umbrales. Define 4-6 segmentos relevantes. RESPONDE SOLO CON EL JSON, SIN TEXTO ADICIONAL.${
+      customPrompt
+        ? `\n\nCONFIGURACIÓN ADICIONAL DEL USUARIO:\n${customPrompt}`
+        : ""
+    }`;
 
     const response = await fetch(`${modelUrl}?key=${GEM_API_KEY}`, {
       method: "POST",

@@ -24,17 +24,142 @@ const DataTable = ({ data }) => {
     return null;
   }
 
-  const columns = Object.keys(data[0]);
+  // Función para calcular días desde fecha última recarga
+  const calculateDaysSinceLastRecharge = (fechaUltimaRecarga) => {
+    if (!fechaUltimaRecarga || fechaUltimaRecarga === "-" || fechaUltimaRecarga === "") {
+      return null;
+    }
+
+    try {
+      let fecha;
+      
+      // Si es número (Excel serial)
+      if (typeof fechaUltimaRecarga === "number") {
+        if (fechaUltimaRecarga > 1 && fechaUltimaRecarga < 73050) {
+          const days = Math.floor(fechaUltimaRecarga) - 25569;
+          fecha = new Date(days * 24 * 60 * 60 * 1000);
+        } else {
+          return null;
+        }
+      } else {
+        // Intentar parsear como fecha
+        const valueStr = String(fechaUltimaRecarga).trim();
+        
+        // Formato ISO: YYYY-MM-DD
+        const isoMatch = valueStr.match(/^(\d{4})-(\d{2})-(\d{2})/);
+        if (isoMatch) {
+          fecha = new Date(isoMatch[1], parseInt(isoMatch[2]) - 1, isoMatch[3]);
+        } else {
+          // Formato DD/MM/YYYY
+          const ddmmyyyyMatch = valueStr.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+          if (ddmmyyyyMatch) {
+            fecha = new Date(ddmmyyyyMatch[3], parseInt(ddmmyyyyMatch[2]) - 1, ddmmyyyyMatch[1]);
+          } else {
+            fecha = new Date(valueStr);
+          }
+        }
+      }
+
+      if (isNaN(fecha.getTime())) {
+        return null;
+      }
+
+      // Calcular diferencia en días
+      const hoy = new Date();
+      hoy.setUTCHours(0, 0, 0, 0);
+      fecha.setUTCHours(0, 0, 0, 0);
+      
+      const diffTime = hoy.getTime() - fecha.getTime();
+      const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+      
+      return diffDays >= 0 ? diffDays : null;
+    } catch (error) {
+      return null;
+    }
+  };
+
+  // Función para obtener el color según los días
+  const getDaysColor = (days) => {
+    if (days === null || days === undefined) return "text-white/60";
+    
+    if (days <= 30) {
+      return "text-green-400 font-semibold"; // Verde: Activos (0-30 días)
+    } else if (days <= 60) {
+      return "text-yellow-400 font-semibold"; // Amarillo: Potencial Churn (31-60 días)
+    } else {
+      return "text-red-400 font-semibold"; // Rojo: Churn (>60 días)
+    }
+  };
+
+  // Definir el orden y las columnas que queremos mostrar
+  // Nota: Los nombres deben coincidir exactamente con los nombres en los datos
+  const desiredColumnOrder = [
+    "MSISDN",
+    "Segmento_IA", // Solo si existe (después de la segmentación)
+    "Consumo MB",
+    "Fecha Ultimo Consumo",
+    "Fecha Activacion",
+    "Fecha Ultima Recarga",
+    "Días desde Última Recarga", // Columna calculada
+    "BRACKET_RECARGA",
+    "BRACKET_CONSUMO",
+    "SURVIVAL",
+  ];
+
+  // Obtener todas las columnas disponibles
+  const allColumns = Object.keys(data[0]);
+
+  // Filtrar y ordenar columnas según el orden deseado
+  const columns = desiredColumnOrder.filter((col) => {
+    // Buscar la columna (case-insensitive)
+    return allColumns.some(
+      (availableCol) => availableCol.toLowerCase() === col.toLowerCase()
+    );
+  });
+
+  // Mapear los nombres de columnas deseados a los nombres reales en los datos
+  const columnMapping = {};
+  desiredColumnOrder.forEach((desiredCol) => {
+    const foundCol = allColumns.find(
+      (availableCol) => availableCol.toLowerCase() === desiredCol.toLowerCase()
+    );
+    if (foundCol) {
+      columnMapping[desiredCol] = foundCol;
+    }
+  });
+
+  // Crear array final con los nombres reales de las columnas en el orden correcto
+  let finalColumns = columns.map((col) => columnMapping[col] || col);
+  
+  // Agregar la columna calculada "Días desde Última Recarga" si existe "Fecha Ultima Recarga"
+  const fechaUltimaRecargaCol = finalColumns.find(
+    (col) => col === "Fecha Ultima Recarga" || col.toLowerCase().includes("fecha ultima recarga")
+  );
+  
+  if (fechaUltimaRecargaCol && !finalColumns.includes("Días desde Última Recarga")) {
+    // Insertar después de "Fecha Ultima Recarga"
+    const index = finalColumns.indexOf(fechaUltimaRecargaCol);
+    finalColumns.splice(index + 1, 0, "Días desde Última Recarga");
+  }
 
   // Filtrar y ordenar datos
   const filteredAndSortedData = useMemo(() => {
     let processedData = [...data];
 
+    // Función helper para obtener el valor de una columna (incluyendo calculadas)
+    const getColumnValue = (row, column) => {
+      if (column === "Días desde Última Recarga") {
+        const days = calculateDaysSinceLastRecharge(row["Fecha Ultima Recarga"]);
+        return days !== null ? `${days} días` : "-";
+      }
+      return String(row[column] || "");
+    };
+
     // Aplicar búsqueda global
     if (searchTerm) {
       processedData = processedData.filter((row) =>
-        columns.some((column) =>
-          String(row[column] || "")
+        finalColumns.some((column) =>
+          getColumnValue(row, column)
             .toLowerCase()
             .includes(searchTerm.toLowerCase())
         )
@@ -46,7 +171,7 @@ const DataTable = ({ data }) => {
       const filterValue = columnFilters[column];
       if (filterValue) {
         processedData = processedData.filter((row) =>
-          String(row[column] || "")
+          getColumnValue(row, column)
             .toLowerCase()
             .includes(filterValue.toLowerCase())
         );
@@ -56,8 +181,18 @@ const DataTable = ({ data }) => {
     // Aplicar ordenamiento
     if (sortConfig.column) {
       processedData.sort((a, b) => {
-        const aValue = a[sortConfig.column];
-        const bValue = b[sortConfig.column];
+        // Manejar columna calculada "Días desde Última Recarga"
+        let aValue, bValue;
+        if (sortConfig.column === "Días desde Última Recarga") {
+          aValue = calculateDaysSinceLastRecharge(a["Fecha Ultima Recarga"]);
+          bValue = calculateDaysSinceLastRecharge(b["Fecha Ultima Recarga"]);
+          // Convertir a número para ordenamiento (null va al final)
+          aValue = aValue === null ? Infinity : aValue;
+          bValue = bValue === null ? Infinity : bValue;
+        } else {
+          aValue = a[sortConfig.column];
+          bValue = b[sortConfig.column];
+        }
 
         // Verificar si es una columna de fecha
         const isDateColumn =
@@ -133,7 +268,7 @@ const DataTable = ({ data }) => {
     }
 
     return processedData;
-  }, [data, searchTerm, columnFilters, sortConfig, columns]);
+  }, [data, searchTerm, columnFilters, sortConfig, finalColumns]);
 
   const totalPages = Math.ceil(filteredAndSortedData.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
@@ -364,7 +499,7 @@ const DataTable = ({ data }) => {
           <div className="mt-4 pt-4 border-t border-white/20">
             <p className="text-white/70 text-sm mb-3">Filtrar por columna:</p>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-              {columns.map((column) => (
+              {finalColumns.map((column) => (
                 <div key={column}>
                   <label className="block text-white/60 text-xs mb-1 truncate">
                     {column}
@@ -388,7 +523,7 @@ const DataTable = ({ data }) => {
         <table className="w-full">
           <thead>
             <tr className="bg-white/5">
-              {columns.map((column, index) => (
+              {finalColumns.map((column, index) => (
                 <th
                   key={index}
                   onClick={() => handleSort(column)}
@@ -446,21 +581,39 @@ const DataTable = ({ data }) => {
                     className="hover:bg-white/5 transition-colors"
                     style={rowStyle}
                   >
-                    {columns.map((column, colIndex) => (
-                      <td
-                        key={colIndex}
-                        className="px-6 py-4 text-sm text-white whitespace-nowrap"
-                      >
-                        {renderCellValue(row[column], column)}
-                      </td>
-                    ))}
+                    {finalColumns.map((column, colIndex) => {
+                      // Manejar columna calculada "Días desde Última Recarga"
+                      if (column === "Días desde Última Recarga") {
+                        const fechaUltimaRecarga = row["Fecha Ultima Recarga"];
+                        const days = calculateDaysSinceLastRecharge(fechaUltimaRecarga);
+                        const colorClass = getDaysColor(days);
+                        
+                        return (
+                          <td
+                            key={colIndex}
+                            className={`px-6 py-4 text-sm whitespace-nowrap ${colorClass}`}
+                          >
+                            {days !== null ? `${days} días` : "-"}
+                          </td>
+                        );
+                      }
+                      
+                      return (
+                        <td
+                          key={colIndex}
+                          className="px-6 py-4 text-sm text-white whitespace-nowrap"
+                        >
+                          {renderCellValue(row[column], column)}
+                        </td>
+                      );
+                    })}
                   </tr>
                 );
               })
             ) : (
               <tr>
                 <td
-                  colSpan={columns.length}
+                  colSpan={finalColumns.length}
                   className="px-6 py-8 text-center text-white/60"
                 >
                   <div className="flex flex-col items-center gap-2">

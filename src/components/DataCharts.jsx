@@ -248,7 +248,7 @@ const DataCharts = ({ chartData }) => {
     labels: [...(chartData.areaChart.labels || [])],
     datasets: [
       {
-        label: 'Tarificación Acumulada',
+        label: 'Consumo Diario (MB)',
         data: [...(chartData.areaChart.data || [])],
         borderColor: '#FFDD00',
         backgroundColor: 'rgba(255, 221, 0, 0.3)',
@@ -280,7 +280,7 @@ const DataCharts = ({ chartData }) => {
   } : null;
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 [&>*:last-child:nth-child(odd)]:lg:col-span-2">
       {/* Gráfico de Barras */}
       {chartData.barChart && (
         <div className="bg-white/10 backdrop-blur-md rounded-xl p-6 border border-white/20">
@@ -371,13 +371,13 @@ const DataCharts = ({ chartData }) => {
         </div>
       )}
 
-      {/* Gráfico de Área: Tarificación Acumulada */}
+      {/* Gráfico de Área: Consumo Diario por Fecha Último Consumo */}
       {chartData.areaChart && areaChartData && (
         <div className="bg-white/10 backdrop-blur-md rounded-xl p-6 border border-white/20">
           <h3 className="text-xl font-bold text-white mb-4">
             {chartData.areaChart.title}
             <span className="ml-2 text-xs text-white/50">
-              (Total: ${areaChartData.datasets[0].data[areaChartData.datasets[0].data.length - 1]?.toLocaleString() || 0})
+              (Consumo máximo diario: {Math.max(...areaChartData.datasets[0].data).toLocaleString()} MB)
             </span>
           </h3>
           <div className="h-64 md:h-80">

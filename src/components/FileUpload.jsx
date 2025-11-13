@@ -11,6 +11,8 @@ const FileUpload = ({ onDataLoaded }) => {
   const [tarifData, setTarifData] = useState(null);
   const [recargaData, setRecargaData] = useState(null);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [showColumnsInfo, setShowColumnsInfo] = useState(false);
+  const [showLargeFilesInfo, setShowLargeFilesInfo] = useState(false);
   const tarifInputRef = useRef(null);
   const recargaInputRef = useRef(null);
 
@@ -605,11 +607,32 @@ const FileUpload = ({ onDataLoaded }) => {
         </div>
       </div>
 
-      {/* Información sobre las columnas esperadas */}
-      <div className="bg-white/5 rounded-xl p-4 border border-white/10">
-        <h4 className="text-white font-semibold text-sm mb-3 flex items-center gap-2">
+      {/* Información sobre las columnas esperadas - Collapse */}
+      <div className="bg-white/5 rounded-xl border border-white/10 overflow-hidden">
+        <button
+          onClick={() => setShowColumnsInfo(!showColumnsInfo)}
+          className="w-full p-4 flex items-center justify-between hover:bg-white/5 transition-colors"
+        >
+          <h4 className="text-white font-semibold text-sm flex items-center gap-2">
+            <svg
+              className="w-4 h-4 text-macroplay-yellow"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+            Columnas esperadas en cada archivo
+          </h4>
           <svg
-            className="w-4 h-4 text-macroplay-yellow"
+            className={`w-5 h-5 text-white/60 transition-transform ${
+              showColumnsInfo ? "rotate-180" : ""
+            }`}
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -618,79 +641,103 @@ const FileUpload = ({ onDataLoaded }) => {
               strokeLinecap="round"
               strokeLinejoin="round"
               strokeWidth={2}
-              d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+              d="M19 9l-7 7-7-7"
             />
           </svg>
-          Columnas esperadas en cada archivo
-        </h4>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
-          <div>
-            <p className="text-macroplay-yellow font-semibold mb-2">
-              Tarificación:
-            </p>
-            <ul className="text-white/60 space-y-1 list-disc list-inside">
-              <li>Fecha_Inicio_PF</li>
-              <li>Fecha_Fin_PF</li>
-              <li>Altan_Usr_ID</li>
-              <li>IMSI</li>
-              <li>MSISDN</li>
-              <li>Fecha_Ejecucion</li>
-              <li>RGU</li>
-              <li>RGU_ID</li>
-              <li>Free_Unit_ID</li>
-              <li>Dias_Activo_PF</li>
-              <li>Dias_Activo_CI</li>
-              <li>Acum_Redond_CI</li>
-              <li>Cuota_Datos_Bytes</li>
-              <li>Acum_Cambio_Domicilio</li>
-              <li>Tot_Units_Cumul</li>
-              <li>Tot_Units_RR_Cumul</li>
-              <li>PCT_RR</li>
-              <li>RR_Limit_Pct</li>
-              <li>Price_Val</li>
-              <li>Precio</li>
-              <li>Tarificacion_PF</li>
-              <li>Cliente</li>
-              <li>Tariff_Period</li>
-              <li>Product_Start_Date</li>
-              <li>Product_End_Date</li>
-              <li>Activation_DT</li>
-              <li>Tarificacion_RGU_PF_Tradicional</li>
-              <li>RM_Performance</li>
-              <li>Cod.</li>
-              <li>OfferId</li>
-              <li>Archivo_Origen</li>
-            </ul>
+        </button>
+        {showColumnsInfo && (
+          <div className="px-4 pb-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+              <div>
+                <p className="text-macroplay-yellow font-semibold mb-2">
+                  Tarificación:
+                </p>
+                <ul className="text-white/60 space-y-1 list-disc list-inside">
+                  <li>Fecha_Inicio_PF</li>
+                  <li>Fecha_Fin_PF</li>
+                  <li>Altan_Usr_ID</li>
+                  <li>IMSI</li>
+                  <li>MSISDN</li>
+                  <li>Fecha_Ejecucion</li>
+                  <li>RGU</li>
+                  <li>RGU_ID</li>
+                  <li>Free_Unit_ID</li>
+                  <li>Dias_Activo_PF</li>
+                  <li>Dias_Activo_CI</li>
+                  <li>Acum_Redond_CI</li>
+                  <li>Cuota_Datos_Bytes</li>
+                  <li>Acum_Cambio_Domicilio</li>
+                  <li>Tot_Units_Cumul</li>
+                  <li>Tot_Units_RR_Cumul</li>
+                  <li>PCT_RR</li>
+                  <li>RR_Limit_Pct</li>
+                  <li>Price_Val</li>
+                  <li>Precio</li>
+                  <li>Tarificacion_PF</li>
+                  <li>Cliente</li>
+                  <li>Tariff_Period</li>
+                  <li>Product_Start_Date</li>
+                  <li>Product_End_Date</li>
+                  <li>Activation_DT</li>
+                  <li>Tarificacion_RGU_PF_Tradicional</li>
+                  <li>RM_Performance</li>
+                  <li>Cod.</li>
+                  <li>OfferId</li>
+                  <li>Archivo_Origen</li>
+                </ul>
+              </div>
+              <div>
+                <p className="text-macroplay-yellow font-semibold mb-2">
+                  Detalle Recargas:
+                </p>
+                <ul className="text-white/60 space-y-1 list-disc list-inside">
+                  <li>COMPANY_NAME</li>
+                  <li>MSISDN</li>
+                  <li>F_PRODUCTO</li>
+                  <li>MODALIDAD</li>
+                  <li>RGU</li>
+                  <li>FECHA_ACTIVACION</li>
+                  <li>FECHA_ULT_RECARGA</li>
+                  <li>FECHA_ULT_CONSUMO</li>
+                  <li>BRACKET_RECARGA</li>
+                  <li>BRACKET_CONSUMO</li>
+                  <li>SURVIVAL</li>
+                  <li>FECHA_CORTE</li>
+                  <li>FECHA_REPORTE</li>
+                  <li>CountBE_ID</li>
+                </ul>
+              </div>
+            </div>
           </div>
-          <div>
-            <p className="text-macroplay-yellow font-semibold mb-2">
-              Detalle Recargas:
-            </p>
-            <ul className="text-white/60 space-y-1 list-disc list-inside">
-              <li>COMPANY_NAME</li>
-              <li>MSISDN</li>
-              <li>F_PRODUCTO</li>
-              <li>MODALIDAD</li>
-              <li>RGU</li>
-              <li>FECHA_ACTIVACION</li>
-              <li>FECHA_ULT_RECARGA</li>
-              <li>FECHA_ULT_CONSUMO</li>
-              <li>BRACKET_RECARGA</li>
-              <li>BRACKET_CONSUMO</li>
-              <li>SURVIVAL</li>
-              <li>FECHA_CORTE</li>
-              <li>FECHA_REPORTE</li>
-              <li>CountBE_ID</li>
-            </ul>
-          </div>
-        </div>
+        )}
       </div>
 
-      {/* Información sobre archivos grandes */}
-      <div className="bg-blue-500/10 backdrop-blur-md rounded-xl p-4 border border-blue-500/30">
-        <h4 className="text-white font-semibold text-sm mb-2 flex items-center gap-2">
+      {/* Información sobre archivos grandes - Collapse */}
+      <div className="bg-blue-500/10 backdrop-blur-md rounded-xl border border-blue-500/30 overflow-hidden">
+        <button
+          onClick={() => setShowLargeFilesInfo(!showLargeFilesInfo)}
+          className="w-full p-4 flex items-center justify-between hover:bg-blue-500/10 transition-colors"
+        >
+          <h4 className="text-white font-semibold text-sm flex items-center gap-2">
+            <svg
+              className="w-4 h-4 text-blue-400"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+              />
+            </svg>
+            Archivos Grandes
+          </h4>
           <svg
-            className="w-4 h-4 text-blue-400"
+            className={`w-5 h-5 text-white/60 transition-transform ${
+              showLargeFilesInfo ? "rotate-180" : ""
+            }`}
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -699,26 +746,30 @@ const FileUpload = ({ onDataLoaded }) => {
               strokeLinecap="round"
               strokeLinejoin="round"
               strokeWidth={2}
-              d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+              d="M19 9l-7 7-7-7"
             />
           </svg>
-          Archivos Grandes
-        </h4>
-        <div className="text-xs text-white/70 space-y-1">
-          <p>
-            • Tamaño máximo recomendado:{" "}
-            <span className="text-white font-semibold">500 MB</span> por archivo
-          </p>
-          <p>
-            • Para archivos mayores a 150 MB, se recomienda usar{" "}
-            <span className="text-white font-semibold">Chrome o Edge</span> para
-            mejor rendimiento
-          </p>
-          <p>
-            • Si experimentas errores con archivos muy grandes, considera
-            dividirlos en partes más pequeñas
-          </p>
-        </div>
+        </button>
+        {showLargeFilesInfo && (
+          <div className="px-4 pb-4">
+            <div className="text-xs text-white/70 space-y-1">
+              <p>
+                • Tamaño máximo recomendado:{" "}
+                <span className="text-white font-semibold">500 MB</span> por
+                archivo
+              </p>
+              <p>
+                • Para archivos mayores a 150 MB, se recomienda usar{" "}
+                <span className="text-white font-semibold">Chrome o Edge</span>{" "}
+                para mejor rendimiento
+              </p>
+              <p>
+                • Si experimentas errores con archivos muy grandes, considera
+                dividirlos en partes más pequeñas
+              </p>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
