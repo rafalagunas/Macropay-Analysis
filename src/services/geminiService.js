@@ -7,8 +7,8 @@
  * - gemini-1.0-pro: Modelo anterior (legacy)
  */
 
-const GEM_API_KEY = "AIzaSyBGQR5qKELf9pOD83YkhgCK3M8UDzJd71g";
-const GEMINI_BASE_URL = "https://generativelanguage.googleapis.com";
+const GEM_API_KEY = "AIzaSyARZYXNJbhm_Kq4Njo9e3MKw2IHBIWU32M";
+const GEM_BASE_URL = "https://generativelanguage.googleapis.com";
 
 // Cache para modelos disponibles
 let availableModelsCache = null;
@@ -23,7 +23,7 @@ const listAvailableModels = async () => {
 
   try {
     const response = await fetch(
-      `${GEMINI_BASE_URL}/v1beta/models?key=${GEM_API_KEY}`
+      `${GEM_BASE_URL}/v1beta/models?key=${GEM_API_KEY}`
     );
 
     if (!response.ok) {
@@ -104,7 +104,7 @@ export const analyzeDataWithAI = async (data, analysis) => {
     }
 
     // Construir la URL completa
-    const modelUrl = `${GEMINI_BASE_URL}/v1beta/${modelToUse}:generateContent`;
+    const modelUrl = `${GEM_BASE_URL}/v1beta/${modelToUse}:generateContent`;
 
     // Intentar analizar con el modelo encontrado
     return await tryAnalyzeWithModel(modelUrl, data, analysis);
@@ -374,7 +374,7 @@ export const segmentUsers = async (data, analysis, customPrompt = "") => {
       modelToUse = availableModels[0];
     }
 
-    const modelUrl = `${GEMINI_BASE_URL}/v1beta/${modelToUse}:generateContent`;
+    const modelUrl = `${GEM_BASE_URL}/v1beta/${modelToUse}:generateContent`;
 
     // Extraer rangos de fechas de los datos
     const dateColumns = [

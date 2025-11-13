@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef } from "react";
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -11,8 +11,8 @@ import {
   Tooltip,
   Legend,
   Filler,
-} from 'chart.js';
-import { Bar, Line, Pie, Doughnut, Scatter } from 'react-chartjs-2';
+} from "chart.js";
+import { Bar, Line, Pie, Doughnut, Scatter } from "react-chartjs-2";
 
 // Registrar componentes de Chart.js
 ChartJS.register(
@@ -30,15 +30,15 @@ ChartJS.register(
 
 const DataCharts = ({ chartData }) => {
   useEffect(() => {
-    console.log('📊 DataCharts montado/actualizado');
-    console.log('  📈 barChart:', !!chartData?.barChart);
-    console.log('  📉 lineChart:', !!chartData?.lineChart);
-    console.log('  🥧 pieChart:', !!chartData?.pieChart);
-    console.log('  🍩 doughnutChart:', !!chartData?.doughnutChart);
-    console.log('  📊 scatterChart:', !!chartData?.scatterChart);
-    console.log('  📊 stackedBarChart:', !!chartData?.stackedBarChart);
-    console.log('  📊 areaChart:', !!chartData?.areaChart);
-    console.log('  📊 histogramChart:', !!chartData?.histogramChart);
+    console.log("📊 DataCharts montado/actualizado");
+    console.log("  📈 barChart:", !!chartData?.barChart);
+    console.log("  📉 lineChart:", !!chartData?.lineChart);
+    console.log("  🥧 pieChart:", !!chartData?.pieChart);
+    console.log("  🍩 doughnutChart:", !!chartData?.doughnutChart);
+    console.log("  📊 scatterChart:", !!chartData?.scatterChart);
+    console.log("  📊 stackedBarChart:", !!chartData?.stackedBarChart);
+    console.log("  📊 areaChart:", !!chartData?.areaChart);
+    console.log("  📊 histogramChart:", !!chartData?.histogramChart);
   }, [chartData]);
 
   const chartOptions = {
@@ -50,51 +50,65 @@ const DataCharts = ({ chartData }) => {
     transitions: {
       active: {
         animation: {
-          duration: 0
-        }
-      }
+          duration: 0,
+        },
+      },
     },
     plugins: {
       legend: {
-        position: 'bottom',
+        position: "bottom",
         labels: {
-          color: '#FFFFFF',
+          color: "#FFFFFF",
           padding: 15,
           font: {
-            size: 12
-          }
-        }
+            size: 12,
+          },
+        },
       },
       tooltip: {
-        backgroundColor: 'rgba(0, 71, 186, 0.9)',
-        titleColor: '#FFDD00',
-        bodyColor: '#FFFFFF',
-        borderColor: '#FFDD00',
+        backgroundColor: "rgba(0, 71, 186, 0.9)",
+        titleColor: "#FFDD00",
+        bodyColor: "#FFFFFF",
+        borderColor: "#FFDD00",
         borderWidth: 1,
         padding: 12,
-        displayColors: true
-      }
+        displayColors: true,
+        callbacks: {
+          label: function (context) {
+            const value =
+              context.parsed.y !== null && context.parsed.y !== undefined
+                ? context.parsed.y
+                : context.parsed;
+            return `${context.dataset.label}: ${Number(value).toLocaleString(
+              "es-MX"
+            )}`;
+          },
+        },
+      },
     },
     scales: {
       x: {
         ticks: {
-          color: '#FFFFFF',
+          color: "#FFFFFF",
           maxRotation: 45,
-          minRotation: 0
+          minRotation: 0,
         },
         grid: {
-          color: 'rgba(255, 255, 255, 0.1)'
-        }
+          color: "rgba(255, 255, 255, 0.1)",
+        },
       },
       y: {
         ticks: {
-          color: '#FFFFFF'
+          color: "#FFFFFF",
+          callback: function (value) {
+            return value.toLocaleString("es-MX");
+          },
         },
         grid: {
-          color: 'rgba(255, 255, 255, 0.1)'
-        }
-      }
-    }
+          color: "rgba(255, 255, 255, 0.1)",
+        },
+      },
+    },
   };
 
   // Forzar creación de nuevos objetos para evitar que Chart.js cachee los datos
@@ -102,45 +116,45 @@ const DataCharts = ({ chartData }) => {
     labels: [...(chartData.barChart?.labels || [])],
     datasets: [
       {
-        label: 'Cantidad',
+        label: "Cantidad",
         data: [...(chartData.barChart?.data || [])],
-        backgroundColor: 'rgba(255, 221, 0, 0.8)',
-        borderColor: '#FFDD00',
+        backgroundColor: "rgba(255, 221, 0, 0.8)",
+        borderColor: "#FFDD00",
         borderWidth: 2,
         borderRadius: 6,
-      }
-    ]
+      },
+    ],
   };
 
   const lineChartData = {
     labels: [...(chartData.lineChart?.labels || [])],
     datasets: [
       {
-        label: 'Tendencia',
+        label: "Tendencia",
         data: [...(chartData.lineChart?.data || [])],
-        borderColor: '#FFDD00',
-        backgroundColor: 'rgba(255, 221, 0, 0.2)',
+        borderColor: "#FFDD00",
+        backgroundColor: "rgba(255, 221, 0, 0.2)",
         borderWidth: 3,
         tension: 0.4,
         fill: true,
-        pointBackgroundColor: '#FFDD00',
-        pointBorderColor: '#FFFFFF',
+        pointBackgroundColor: "#FFDD00",
+        pointBorderColor: "#FFFFFF",
         pointBorderWidth: 2,
         pointRadius: 5,
-        pointHoverRadius: 7
-      }
-    ]
+        pointHoverRadius: 7,
+      },
+    ],
   };
 
   const pieColors = [
-    'rgba(255, 221, 0, 0.9)',
-    'rgba(255, 180, 0, 0.9)',
-    'rgba(255, 140, 0, 0.9)',
-    'rgba(230, 199, 0, 0.9)',
-    'rgba(200, 170, 0, 0.9)',
-    'rgba(170, 140, 0, 0.9)',
-    'rgba(255, 200, 50, 0.9)',
-    'rgba(255, 230, 100, 0.9)',
+    "rgba(255, 221, 0, 0.9)",
+    "rgba(255, 180, 0, 0.9)",
+    "rgba(255, 140, 0, 0.9)",
+    "rgba(230, 199, 0, 0.9)",
+    "rgba(200, 170, 0, 0.9)",
+    "rgba(170, 140, 0, 0.9)",
+    "rgba(255, 200, 50, 0.9)",
+    "rgba(255, 230, 100, 0.9)",
   ];
 
   const pieChartData = {
@@ -149,10 +163,10 @@ const DataCharts = ({ chartData }) => {
       {
         data: [...(chartData.pieChart?.data || [])],
         backgroundColor: pieColors,
-        borderColor: '#FFFFFF',
+        borderColor: "#FFFFFF",
         borderWidth: 2,
-      }
-    ]
+      },
+    ],
   };
 
   const doughnutChartData = {
@@ -161,32 +175,34 @@ const DataCharts = ({ chartData }) => {
       {
         data: [...(chartData.doughnutChart?.data || [])],
         backgroundColor: pieColors,
-        borderColor: '#FFFFFF',
+        borderColor: "#FFFFFF",
         borderWidth: 2,
-      }
-    ]
+      },
+    ],
   };
 
   const pieOptions = {
     ...chartOptions,
-    scales: undefined
+    scales: undefined,
   };
 
   // Gráfico de dispersión (Scatter)
-  const scatterChartData = chartData.scatterChart ? {
-    datasets: [
-      {
-        label: 'Consumo vs Tarificación',
-        data: chartData.scatterChart.data,
-        backgroundColor: 'rgba(255, 221, 0, 0.6)',
-        borderColor: '#FFDD00',
-        pointRadius: 6,
-        pointHoverRadius: 8,
-        pointBorderWidth: 2,
-        pointBorderColor: '#FFFFFF',
+  const scatterChartData = chartData.scatterChart
+    ? {
+        datasets: [
+          {
+            label: "Consumo vs Tarificación",
+            data: chartData.scatterChart.data,
+            backgroundColor: "rgba(255, 221, 0, 0.6)",
+            borderColor: "#FFDD00",
+            pointRadius: 6,
+            pointHoverRadius: 8,
+            pointBorderWidth: 2,
+            pointBorderColor: "#FFFFFF",
+          },
+        ],
       }
-    ]
-  } : null;
+    : null;
 
   const scatterOptions = {
     ...chartOptions,
@@ -195,101 +211,116 @@ const DataCharts = ({ chartData }) => {
         ...chartOptions.scales.x,
         title: {
           display: true,
-          text: chartData.scatterChart?.xLabel || 'Consumo MB',
-          color: '#FFFFFF',
-          font: { size: 12 }
-        }
+          text: chartData.scatterChart?.xLabel || "Consumo MB",
+          color: "#FFFFFF",
+          font: { size: 12 },
+        },
       },
       y: {
         ...chartOptions.scales.y,
         title: {
           display: true,
-          text: chartData.scatterChart?.yLabel || 'Tarificación',
-          color: '#FFFFFF',
-          font: { size: 12 }
-        }
-      }
+          text: chartData.scatterChart?.yLabel || "Tarificación",
+          color: "#FFFFFF",
+          font: { size: 12 },
+        },
+      },
     },
     plugins: {
       ...chartOptions.plugins,
       tooltip: {
         ...chartOptions.plugins.tooltip,
         callbacks: {
-          title: function(context) {
+          title: function (context) {
             // Mostrar el MSISDN como título del tooltip
-            const dataPoint = scatterChartData.datasets[0].data[context[0].dataIndex];
-            return dataPoint.label || 'Sin identificar';
+            const dataPoint =
+              scatterChartData.datasets[0].data[context[0].dataIndex];
+            return dataPoint.label || "Sin identificar";
           },
-          label: function(context) {
-            return `Consumo: ${context.parsed.x.toLocaleString()} MB, Tarificación: $${context.parsed.y.toLocaleString()}`;
-          }
-        }
-      }
-    }
+          label: function (context) {
+            return `Consumo: ${Number(context.parsed.x).toLocaleString(
+              "es-MX"
+            )} MB, Tarificación: $${Number(context.parsed.y).toLocaleString(
+              "es-MX"
+            )}`;
+          },
+        },
+      },
+    },
   };
 
   // Gráfico de barras apiladas (Stacked Bar)
-  const stackedBarChartData = chartData.stackedBarChart ? {
-    labels: [...(chartData.stackedBarChart.labels || [])],
-    datasets: [
-      {
-        label: 'Consumo Total (MB)',
-        data: [...(chartData.stackedBarChart.data || [])],
-        backgroundColor: 'rgba(255, 221, 0, 0.8)',
-        borderColor: '#FFDD00',
-        borderWidth: 2,
-        borderRadius: 6,
+  const stackedBarChartData = chartData.stackedBarChart
+    ? {
+        labels: [...(chartData.stackedBarChart.labels || [])],
+        datasets: [
+          {
+            label: "Consumo Total (MB)",
+            data: [...(chartData.stackedBarChart.data || [])],
+            backgroundColor: "rgba(255, 221, 0, 0.8)",
+            borderColor: "#FFDD00",
+            borderWidth: 2,
+            borderRadius: 6,
+          },
+        ],
       }
-    ]
-  } : null;
+    : null;
 
   // Gráfico de área (Area Chart)
-  const areaChartData = chartData.areaChart ? {
-    labels: [...(chartData.areaChart.labels || [])],
-    datasets: [
-      {
-        label: 'Consumo Diario (MB)',
-        data: [...(chartData.areaChart.data || [])],
-        borderColor: '#FFDD00',
-        backgroundColor: 'rgba(255, 221, 0, 0.3)',
-        borderWidth: 3,
-        tension: 0.4,
-        fill: true,
-        pointBackgroundColor: '#FFDD00',
-        pointBorderColor: '#FFFFFF',
-        pointBorderWidth: 2,
-        pointRadius: 4,
-        pointHoverRadius: 6
+  const areaChartData = chartData.areaChart
+    ? {
+        labels: [...(chartData.areaChart.labels || [])],
+        datasets: [
+          {
+            label: "Consumo Diario (MB)",
+            data: [...(chartData.areaChart.data || [])],
+            borderColor: "#FFDD00",
+            backgroundColor: "rgba(255, 221, 0, 0.3)",
+            borderWidth: 3,
+            tension: 0.4,
+            fill: true,
+            pointBackgroundColor: "#FFDD00",
+            pointBorderColor: "#FFFFFF",
+            pointBorderWidth: 2,
+            pointRadius: 4,
+            pointHoverRadius: 6,
+          },
+        ],
       }
-    ]
-  } : null;
+    : null;
 
   // Histograma (usando Bar chart)
-  const histogramChartData = chartData.histogramChart ? {
-    labels: [...(chartData.histogramChart.labels || [])],
-    datasets: [
-      {
-        label: 'Clientes',
-        data: [...(chartData.histogramChart.data || [])],
-        backgroundColor: 'rgba(255, 221, 0, 0.8)',
-        borderColor: '#FFDD00',
-        borderWidth: 2,
-        borderRadius: 4,
+  const histogramChartData = chartData.histogramChart
+    ? {
+        labels: [...(chartData.histogramChart.labels || [])],
+        datasets: [
+          {
+            label: "Clientes",
+            data: [...(chartData.histogramChart.data || [])],
+            backgroundColor: "rgba(255, 221, 0, 0.8)",
+            borderColor: "#FFDD00",
+            borderWidth: 2,
+            borderRadius: 4,
+          },
+        ],
       }
-    ]
-  } : null;
+    : null;
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 [&>*:last-child:nth-child(odd)]:lg:col-span-2">
       {/* Gráfico de Barras */}
       {chartData.barChart && (
         <div className="bg-white/10 backdrop-blur-md rounded-xl p-6 border border-white/20">
-          <h3 className="text-xl font-bold text-white mb-4">
+          <h3 className="text-xl font-bold text-white mb-1">
             {chartData.barChart.title}
-            <span className="ml-2 text-xs text-white/50">
-              (Total: {barChartData.datasets[0].data.reduce((a, b) => a + b, 0)})
-            </span>
           </h3>
+          <p className="text-white/50 text-sm mb-4">
+            Total:{" "}
+            {Number(
+              barChartData.datasets[0].data.reduce((a, b) => a + b, 0)
+            ).toLocaleString("es-MX")}{" "}
+            clientes
+          </p>
           <div className="h-64 md:h-80">
             <Bar data={barChartData} options={chartOptions} redraw={true} />
           </div>
@@ -299,12 +330,16 @@ const DataCharts = ({ chartData }) => {
       {/* Gráfico de Línea */}
       {chartData.lineChart && (
         <div className="bg-white/10 backdrop-blur-md rounded-xl p-6 border border-white/20">
-          <h3 className="text-xl font-bold text-white mb-4">
+          <h3 className="text-xl font-bold text-white mb-1">
             {chartData.lineChart.title}
-            <span className="ml-2 text-xs text-white/50">
-              (Total: {lineChartData.datasets[0].data.reduce((a, b) => a + b, 0)})
-            </span>
           </h3>
+          <p className="text-white/50 text-sm mb-4">
+            Total:{" "}
+            {Number(
+              lineChartData.datasets[0].data.reduce((a, b) => a + b, 0)
+            ).toLocaleString("es-MX")}{" "}
+            registros
+          </p>
           <div className="h-64 md:h-80">
             <Line data={lineChartData} options={chartOptions} redraw={true} />
           </div>
@@ -314,12 +349,15 @@ const DataCharts = ({ chartData }) => {
       {/* Gráfico de Pie */}
       {chartData.pieChart && (
         <div className="bg-white/10 backdrop-blur-md rounded-xl p-6 border border-white/20">
-          <h3 className="text-xl font-bold text-white mb-4">
+          <h3 className="text-xl font-bold text-white mb-1">
             {chartData.pieChart.title}
-            <span className="ml-2 text-xs text-white/50">
-              (Total: {pieChartData.datasets[0].data.reduce((a, b) => a + b, 0)})
-            </span>
           </h3>
+          <p className="text-white/50 text-sm mb-4">
+            Total:{" "}
+            {Number(
+              pieChartData.datasets[0].data.reduce((a, b) => a + b, 0)
+            ).toLocaleString("es-MX")}
+          </p>
           <div className="h-64 md:h-80">
             <Pie data={pieChartData} options={pieOptions} redraw={true} />
           </div>
@@ -329,14 +367,21 @@ const DataCharts = ({ chartData }) => {
       {/* Gráfico de Dona */}
       {chartData.doughnutChart && (
         <div className="bg-white/10 backdrop-blur-md rounded-xl p-6 border border-white/20">
-          <h3 className="text-xl font-bold text-white mb-4">
+          <h3 className="text-xl font-bold text-white mb-1">
             {chartData.doughnutChart.title}
-            <span className="ml-2 text-xs text-white/50">
-              (Total: {doughnutChartData.datasets[0].data.reduce((a, b) => a + b, 0)})
-            </span>
           </h3>
+          <p className="text-white/50 text-sm mb-4">
+            Total:{" "}
+            {Number(
+              doughnutChartData.datasets[0].data.reduce((a, b) => a + b, 0)
+            ).toLocaleString("es-MX")}
+          </p>
           <div className="h-64 md:h-80">
-            <Doughnut data={doughnutChartData} options={pieOptions} redraw={true} />
+            <Doughnut
+              data={doughnutChartData}
+              options={pieOptions}
+              redraw={true}
+            />
           </div>
         </div>
       )}
@@ -344,14 +389,22 @@ const DataCharts = ({ chartData }) => {
       {/* Gráfico de Dispersión: Consumo MB vs Tarificación */}
       {chartData.scatterChart && scatterChartData && (
         <div className="bg-white/10 backdrop-blur-md rounded-xl p-6 border border-white/20">
-          <h3 className="text-xl font-bold text-white mb-4">
+          <h3 className="text-xl font-bold text-white mb-1">
             {chartData.scatterChart.title}
-            <span className="ml-2 text-xs text-white/50">
-              ({scatterChartData.datasets[0].data.length} puntos)
-            </span>
           </h3>
+          <p className="text-white/50 text-sm mb-4">
+            Total:{" "}
+            {Number(scatterChartData.datasets[0].data.length).toLocaleString(
+              "es-MX"
+            )}{" "}
+            puntos
+          </p>
           <div className="h-64 md:h-80">
-            <Scatter data={scatterChartData} options={scatterOptions} redraw={true} />
+            <Scatter
+              data={scatterChartData}
+              options={scatterOptions}
+              redraw={true}
+            />
           </div>
         </div>
       )}
@@ -359,14 +412,22 @@ const DataCharts = ({ chartData }) => {
       {/* Gráfico de Barras Apiladas: Consumo por Oferta */}
       {chartData.stackedBarChart && stackedBarChartData && (
         <div className="bg-white/10 backdrop-blur-md rounded-xl p-6 border border-white/20">
-          <h3 className="text-xl font-bold text-white mb-4">
+          <h3 className="text-xl font-bold text-white mb-1">
             {chartData.stackedBarChart.title}
-            <span className="ml-2 text-xs text-white/50">
-              (Total: {stackedBarChartData.datasets[0].data.reduce((a, b) => a + b, 0).toLocaleString()} MB)
-            </span>
           </h3>
+          <p className="text-white/50 text-sm mb-4">
+            Total:{" "}
+            {Number(
+              stackedBarChartData.datasets[0].data.reduce((a, b) => a + b, 0)
+            ).toLocaleString("es-MX")}{" "}
+            MB
+          </p>
           <div className="h-64 md:h-80">
-            <Bar data={stackedBarChartData} options={chartOptions} redraw={true} />
+            <Bar
+              data={stackedBarChartData}
+              options={chartOptions}
+              redraw={true}
+            />
           </div>
         </div>
       )}
@@ -374,12 +435,16 @@ const DataCharts = ({ chartData }) => {
       {/* Gráfico de Área: Consumo Diario por Fecha Último Consumo */}
       {chartData.areaChart && areaChartData && (
         <div className="bg-white/10 backdrop-blur-md rounded-xl p-6 border border-white/20">
-          <h3 className="text-xl font-bold text-white mb-4">
+          <h3 className="text-xl font-bold text-white mb-1">
             {chartData.areaChart.title}
-            <span className="ml-2 text-xs text-white/50">
-              (Consumo máximo diario: {Math.max(...areaChartData.datasets[0].data).toLocaleString()} MB)
-            </span>
           </h3>
+          <p className="text-white/50 text-sm mb-4">
+            Consumo máximo diario:{" "}
+            {Number(Math.max(...areaChartData.datasets[0].data)).toLocaleString(
+              "es-MX"
+            )}{" "}
+            MB
+          </p>
           <div className="h-64 md:h-80">
             <Line data={areaChartData} options={chartOptions} redraw={true} />
           </div>
@@ -389,14 +454,22 @@ const DataCharts = ({ chartData }) => {
       {/* Histograma: Distribución de Consumo MB */}
       {chartData.histogramChart && histogramChartData && (
         <div className="bg-white/10 backdrop-blur-md rounded-xl p-6 border border-white/20">
-          <h3 className="text-xl font-bold text-white mb-4">
+          <h3 className="text-xl font-bold text-white mb-1">
             {chartData.histogramChart.title}
-            <span className="ml-2 text-xs text-white/50">
-              (Total: {histogramChartData.datasets[0].data.reduce((a, b) => a + b, 0)} clientes)
-            </span>
           </h3>
+          <p className="text-white/50 text-sm mb-4">
+            Total:{" "}
+            {Number(
+              histogramChartData.datasets[0].data.reduce((a, b) => a + b, 0)
+            ).toLocaleString("es-MX")}{" "}
+            clientes
+          </p>
           <div className="h-64 md:h-80">
-            <Bar data={histogramChartData} options={chartOptions} redraw={true} />
+            <Bar
+              data={histogramChartData}
+              options={chartOptions}
+              redraw={true}
+            />
           </div>
         </div>
       )}
@@ -405,4 +478,3 @@ const DataCharts = ({ chartData }) => {
 };
 
 export default DataCharts;
-

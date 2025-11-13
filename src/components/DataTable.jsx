@@ -416,7 +416,8 @@ const DataTable = ({ data }) => {
           <div>
             <h3 className="text-xl font-bold text-white">Datos del Excel</h3>
             <p className="text-white/60 text-sm mt-1">
-              {filteredAndSortedData.length} de {data.length} registros
+              {Number(filteredAndSortedData.length).toLocaleString("es-MX")} de{" "}
+              {Number(data.length).toLocaleString("es-MX")} registros
               {hasActiveFilters && " (filtrados)"}
             </p>
           </div>

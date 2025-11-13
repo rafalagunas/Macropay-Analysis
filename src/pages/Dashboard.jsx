@@ -1572,7 +1572,7 @@ const Dashboard = () => {
                         Total Registros
                       </p>
                       <p className="text-3xl font-bold text-macroplay-yellow">
-                        {analysis.totalRecords}
+                        {analysis.totalRecords.toLocaleString("es-MX")}
                       </p>
                     </div>
                     <div className="w-12 h-12 bg-macroplay-yellow/20 rounded-lg flex items-center justify-center">
@@ -1598,7 +1598,7 @@ const Dashboard = () => {
                     <div>
                       <p className="text-white/70 text-sm mb-1">Columnas</p>
                       <p className="text-3xl font-bold text-macroplay-yellow">
-                        {analysis.columns.length}
+                        {analysis.columns.length.toLocaleString("es-MX")}
                       </p>
                     </div>
                     <div className="w-12 h-12 bg-macroplay-yellow/20 rounded-lg flex items-center justify-center">
@@ -1637,7 +1637,7 @@ const Dashboard = () => {
                             Total de Clientes
                           </p>
                           <p className="text-2xl font-bold text-macroplay-yellow">
-                            {totalClientes.toLocaleString()}
+                            {totalClientes.toLocaleString("es-MX")}
                           </p>
                           <p className="text-white/50 text-xs mt-1">
                             MSISDNs únicos
@@ -1693,16 +1693,17 @@ const Dashboard = () => {
                             {(
                               Number(analysis.summary[consumoMBKey].total) /
                               totalClientes
-                            )
-                              .toFixed(2)
-                              .toLocaleString()}{" "}
+                            ).toLocaleString("es-MX", {
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2,
+                            })}{" "}
                             MB
                           </p>
                           <p className="text-white/50 text-xs mt-1">
                             Total:{" "}
                             {Number(
                               analysis.summary[consumoMBKey].total
-                            ).toLocaleString()}{" "}
+                            ).toLocaleString("es-MX")}{" "}
                             MB
                           </p>
                         </div>
@@ -1734,7 +1735,11 @@ const Dashboard = () => {
                     <h3 className="text-xl font-bold text-white mb-4">
                       Visualización de Datos
                       <span className="ml-2 text-xs text-white/50">
-                        ({correlatedData?.length || 0} registros)
+                        (
+                        {Number(correlatedData?.length || 0).toLocaleString(
+                          "es-MX"
+                        )}{" "}
+                        registros)
                       </span>
                     </h3>
                     <DataCharts
@@ -1856,7 +1861,7 @@ const Dashboard = () => {
                     <h4 className="text-lg font-bold text-white mb-4">
                       Distribución de Clientes por Segmento IA
                       <span className="ml-2 text-xs text-white/50">
-                        (Total: {correlatedData?.length.toLocaleString()}{" "}
+                        {"\n"}(Total: {correlatedData?.length.toLocaleString()}{" "}
                         registros)
                       </span>
                     </h4>
